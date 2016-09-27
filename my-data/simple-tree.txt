@@ -1,0 +1,25 @@
+Leaf Actions [GoTo,RunAway,GhostNearby,HasPowerPill,GetNearbyScaredGhost,PowerPillsAround,NearestPill]
+Selector
+{
+Sequence
+{
+Leaf;GhostNearby
+Leaf;RunAway
+}
+Sequence
+{
+Leaf;HasPowerPill
+Leaf;GetNearbyScaredGhost
+Leaf;GoTo
+}
+Sequence
+{
+Leaf;PowerPillsAround
+Leaf;GoTo
+}
+Sequence
+{
+Leaf;NearestPill
+Leaf;GoTo
+}
+}
