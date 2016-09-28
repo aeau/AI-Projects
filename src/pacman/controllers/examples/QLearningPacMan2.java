@@ -50,20 +50,20 @@ public class QLearningPacMan2 extends Controller<MOVE>{
 		//Current state --- we compute value in table for the next move
 		//next_move = MOVE.values()[q_table.getNextAction(ps.toString())];
 		next_move = game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), q_table.target, DM.PATH);
-//		
-//		 for(GHOST ghost : GHOST.values())
-//		{
-//        	if(game.getGhostLairTime(ghost) == 0 && game.getGhostEdibleTime(ghost)==0)
-//        	{
-//	        	int dist = game.getShortestPathDistance(game.getPacmanCurrentNodeIndex(),
-//						game.getGhostCurrentNodeIndex(ghost));
-//	        	
-//				if(dist<=25)
-//				{
-//					q_table.target = -1;
-//				}
-//        	}
-//		}
+		
+		 for(GHOST ghost : GHOST.values())
+		{
+        	if(game.getGhostLairTime(ghost) == 0 && game.getGhostEdibleTime(ghost)==0)
+        	{
+	        	int dist = game.getShortestPathDistance(game.getPacmanCurrentNodeIndex(),
+						game.getGhostCurrentNodeIndex(ghost));
+	        	
+				if(dist<=10)
+				{
+					q_table.target = -1;
+				}
+        	}
+		}
 		
 		return next_move;
 	}

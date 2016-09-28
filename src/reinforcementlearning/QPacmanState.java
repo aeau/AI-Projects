@@ -175,9 +175,10 @@ public class QPacmanState{
 		
 		int[] mix = new int[inters.length + juncs.length];
 		
-		if(mix.length < 5)
+		if(mix.length < 4)
 		{
-			mix = game.getJunctionIndices();
+			mix = new int[game.getActivePillsIndices().length];
+			mix = game.getActivePillsIndices();
 		}
 		else
 		{

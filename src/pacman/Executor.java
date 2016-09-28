@@ -62,7 +62,7 @@ public class Executor
 	{
 		Executor exec=new Executor();
 		boolean visual = true;
-		int numTrials=500;
+		int numTrials=2000;
 		
 		//HUMAN TEST
 		//exec.runGameTimed(new HumanController(new KeyBoardInput()),new StarterGhosts(),visual);
@@ -71,20 +71,20 @@ public class Executor
 		
 		QTable q = new QTable(4);
 		
-		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
-		q.explorationChance = 0.0f;
+//		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
+//		q.explorationChance = 0.0f;
 //		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
 //		q.explorationChance = 0.7f;
 //		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
 //		q.explorationChance = 0.0f;
 //		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
 //		DataManager.SaveQTable(q, "first_try.txt");
-		exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
+		//exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
 		
 		//LOAD Q TABLE
-//		q = DataManager.LoadQTable("first_try.txt");
-//		q.explorationChance = 0.0f;
-//		exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
+		q = DataManager.LoadQTable("first_try.txt");
+		q.explorationChance = 0.0f;
+		exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
 		
 		//FOR NEURAL NETWORKS
 
@@ -727,12 +727,15 @@ public class Executor
 	        		//GameView.addPoints(game, Color.CYAN, ClosestKJunctions(game, 4, q.previous_target));
 	        		
 	        		//GameView.addLines(game, Color.MAGENTA, q.previous_target, q.target);
+	        	if(q.target != -1 && q.previous_target != -1)
+	        	{
 	        		int[] path = game.getShortestPath(q.previous_target, q.target);
 	        		
 	        		for(int i= 0; i < path.length -1; i++)
 	        		{
 	        			GameView.addLines(game, Color.MAGENTA, path[i], path[i + 1]);
 	        		}
+	        	}
 //	        		if(q.target != -1)
 //	        			GameView.addPoints(game, Color.GREEN,q.target);
 	        	
