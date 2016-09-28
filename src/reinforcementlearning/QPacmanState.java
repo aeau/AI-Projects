@@ -165,18 +165,32 @@ public class QPacmanState{
 	public int[] ClosestKJunctions(Game game, int k, int previous_index)
 	{
 		int[] closest_juncs = new int[k];
-		int[] inters = game.GetIntersections();
-		int[] juncs = game.getJunctionIndices();
+		int[] inters = game.GetPillIntersection();
+		int[] juncs = game.GetJunctionPills();
+		
+//		if(inters.length < 5)
+//		{
+//			inters = game.GetIntersections();
+//		}
 		
 		int[] mix = new int[inters.length + juncs.length];
-		int i = 0;
-		for(i = 0; i < inters.length; i++)
+		
+		if(mix.length < 5)
 		{
-			mix[i] = inters[i];
+			mix = game.getJunctionIndices();
 		}
-		for(int j = 0; j < juncs.length; j++, i++)
+		else
 		{
-			mix[i] = juncs[j];
+		
+			int i = 0;
+			for(i = 0; i < inters.length; i++)
+			{
+				mix[i] = inters[i];
+			}
+			for(int j = 0; j < juncs.length; j++, i++)
+			{
+				mix[i] = juncs[j];
+			}
 		}
 		
 		

@@ -73,13 +73,13 @@ public class Executor
 		
 		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
 		q.explorationChance = 0.0f;
-		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
-		q.explorationChance = 0.7f;
-		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
-		q.explorationChance = 0.0f;
-		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
-		DataManager.SaveQTable(q, "first_try.txt");
-		//exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
+//		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
+//		q.explorationChance = 0.7f;
+//		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
+//		q.explorationChance = 0.0f;
+//		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
+//		DataManager.SaveQTable(q, "first_try.txt");
+		exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
 		
 		//LOAD Q TABLE
 //		q = DataManager.LoadQTable("first_try.txt");
@@ -107,11 +107,9 @@ public class Executor
 		//int numTrials=10;
 		//exec.runExperiment(new RandomPacMan(),new RandomGhosts(),numTrials);
 		
-		
-		
 		//Load tree from txt file
-		//Tree t = DataManager.LoadTree("Champion_copy.txt");
-		//exec.runGameTimed(new BehaviorTreePacMan(t),new StarterGhosts(),visual);
+//		Tree t = DataManager.LoadTree("Champion_copy.txt");
+//		exec.runGameTimed(new BehaviorTreePacMan(t),new StarterGhosts(),visual);
 		//exec.runGame(new BehaviorTreePacMan(t),new StarterGhosts(),visual,5);
 		//exec.runExperiment(new BehaviorTreePacMan(t),new StarterGhosts(),100);
 		//exec.runGameTimed(new HumanController(new KeyBoardInput()),new StarterGhosts(),visual);
@@ -197,7 +195,7 @@ public class Executor
 		{
 			int min_dist = Integer.MAX_VALUE;
 			int selected_index = -1;
-			for(int index : mix)
+			for(int index : inters)
 			{
 				int dist = game.getShortestPathDistance(pacm, index);
 				if(dist < min_dist && !targetjuncs.contains(index) && index != pacm && index != previous_target)
@@ -726,7 +724,7 @@ public class Executor
 	        if(visual)
 	        {
 	        	//if(game.isJunction(game.getPacmanCurrentNodeIndex()))
-	        		GameView.addPoints(game, Color.CYAN, ClosestKJunctions(game, 4, q.previous_target));
+	        		//GameView.addPoints(game, Color.CYAN, ClosestKJunctions(game, 4, q.previous_target));
 	        		
 	        		//GameView.addLines(game, Color.MAGENTA, q.previous_target, q.target);
 	        		int[] path = game.getShortestPath(q.previous_target, q.target);
@@ -738,7 +736,8 @@ public class Executor
 //	        		if(q.target != -1)
 //	        			GameView.addPoints(game, Color.GREEN,q.target);
 	        	
-	        	//GameView.addPoints(game, Color.MAGENTA, game.GetIntersections());
+	        	GameView.addPoints(game, Color.MAGENTA, game.GetPillIntersection());
+	        	GameView.addPoints(game, Color.CYAN, game.GetJunctionPills());
 	        	//GameView.addPoints(game, Color.CYAN, game.getJunctionIndices());
 	        	gv.repaint();
 	        	

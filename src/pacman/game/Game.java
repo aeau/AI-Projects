@@ -220,8 +220,7 @@ public final class Game
 					{
 						inters.add(i);
 					}
-				
-				
+
 			}
 			
 			intersections = new int[inters.size()];
@@ -236,6 +235,78 @@ public final class Game
 		{
 			return this.intersections;
 		}
+	}
+	
+	public int[] GetJunctionPills()
+	{
+		int[] result;
+		int[] juncs = getJunctionIndices();
+		ArrayList<Integer> pills = new ArrayList<Integer>();
+		
+		for(int index : juncs)
+		{
+			int pill = getPillIndex(index);
+			if(pill != -1)
+			{
+				if(isPillStillAvailable(pill))
+				{
+					pills.add(index);
+					continue;
+				}
+			}
+			pill = getPowerPillIndex(index);
+			if(pill != -1)
+			{
+				if(isPowerPillStillAvailable(pill))
+				{
+					pills.add(index);
+					continue;
+				}
+			}
+		}
+		
+		result = new int[pills.size()];
+		
+		for(int i=0;i<result.length;i++)
+			result[i]=pills.get(i);
+		
+		return result;
+	}
+	
+	public int[] GetPillIntersection()
+	{
+		int[] result;
+		int[] inters = GetIntersections();
+		ArrayList<Integer> pills = new ArrayList<Integer>();
+		
+		for(int index : inters)
+		{
+			int pill = getPillIndex(index);
+			if(pill != -1)
+			{
+				if(isPillStillAvailable(pill))
+				{
+					pills.add(index);
+					continue;
+				}
+			}
+			pill = getPowerPillIndex(index);
+			if(pill != -1)
+			{
+				if(isPowerPillStillAvailable(pill))
+				{
+					pills.add(index);
+					continue;
+				}
+			}
+		}
+		
+		result = new int[pills.size()];
+		
+		for(int i=0;i<result.length;i++)
+			result[i]=pills.get(i);
+		
+		return result;
 	}
 	
 	public double NormalizeBetweenZeroAndOne(int value, double min, double max)
