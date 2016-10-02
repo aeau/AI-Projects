@@ -28,13 +28,16 @@ import pacman.game.Constants.MOVE;
 public class UCT {
 
 	private boolean DEBUG 			= false;
-	private int 	MAX_LEVEL_TIME 	= 200;
+	private int 	MAX_LEVEL_TIME 	= 8;
 	
 	/*
 	 * Maze used to control the game
 	 */
 	public Game game;
 	private Random random = new Random();
+	
+	private ArrayList<Integer> juncs = new ArrayList<Integer>();
+	public int[] selected_juncs;
 	
 	/*
 	 * rootNode is the starting point of the present state
@@ -56,7 +59,7 @@ public class UCT {
 	/*
 	 * Computational limit
 	 */
-	protected final int maxIterations = 14;
+	protected final int maxIterations = 50;
 	
 	
 	//Random ghosts
@@ -114,6 +117,8 @@ public class UCT {
 	 * @throws InterruptedException
 	 */
 	public MOVE runUCT(int action, long timeDue) throws InterruptedException{
+		
+		juncs.clear();
 		
             /*
              * Create root node with the present state
@@ -185,7 +190,6 @@ public class UCT {
 	//and the state we store in them is the state returned from this function.
 	private Game ExecutePathToTarget(int junction_node, Game st)
 	{
-		
 		//TODO: CHECK THIS CODE! PROBLEMS IN THE PATH OR MAYBE DEFAUL POLICY
 		Game returning_state = st.copy();
 		int[] path = returning_state.getShortestPath(st.getPacmanCurrentNodeIndex(), junction_node);
@@ -196,17 +200,13 @@ public class UCT {
 			
 			if(returning_state.wasPacManEaten())
 			{
+				System.out.println("PACMAN DEAD in node: " + pacman_position);
+				System.out.println("OLD PACMAN POS: " + st.getPacmanCurrentNodeIndex());
 				return st;
 			}
-			System.out.println("next position: " + p);
-			System.out.println("current_position: " + pacman_position);
-			while(pacman_position != p)
-			{
-				returning_state.advanceGame(returning_state.getNextMoveTowardsTarget(pacman_position, p,DM.PATH),randomGhostMovement(returning_state));
-				pacman_position = returning_state.getPacmanCurrentNodeIndex();
-			}
-			
-			System.out.println("DO WE ARRIVE HERE ? ");
+//			System.out.println("next position: " + p);
+//			System.out.println("current_position: " + pacman_position);
+			returning_state.advanceGame(returning_state.getNextMoveTowardsTarget(pacman_position, p,DM.PATH),randomGhostMovement(returning_state));
 		}
 		
 		return returning_state;
@@ -219,35 +219,42 @@ public class UCT {
 		
 	}
 	
+	public int[] GetSelectedJuncs()
+	{
+		selected_juncs = new int[juncs.size()];
+		
+		for(int i=0;i<selected_juncs.length;i++)
+			selected_juncs[i]=juncs.get(i);
+		
+		return selected_juncs;
+	}
+	
 	public int ClosestJunction(Game game, int previous_index, int actual_pos)
 	{
 		int[] juncs = game.getJunctionIndices();
 		int selected_junc = -1;
-		ArrayList<Integer> targetjuncs=new ArrayList<Integer>();
-		int pacm = actual_pos;
 		
 		//System.out.println("PACMAN POS: " + pacm + "; PREVIOUS PACMAN POS: " + previous_index);
-		for(int j = -1; j < 1; j++)
+		for(int j = 0; j < 1; j++)
 		{
 			int min_dist = Integer.MAX_VALUE;
 			int selected_index = -1;
 			for(int index : juncs)
 			{
-				int dist = game.getShortestPathDistance(pacm, index);
+				int dist = game.getShortestPathDistance(actual_pos, index);
 				if(dist < min_dist && 
-					!targetjuncs.contains(index) && 
-					index != pacm &&
+					index != actual_pos &&
 					previous_index != index)
 				{
 					min_dist = dist;
 					selected_index = index;
 				}
 			}
-			targetjuncs.add(selected_index);
-			if(j >= 0)
-				selected_junc = selected_index;
+			
+			selected_junc = selected_index;
 		}
 		
+		this.juncs.add(selected_junc);
 		return selected_junc;
 	}
 	

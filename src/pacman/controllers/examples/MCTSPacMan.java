@@ -1,9 +1,12 @@
 package pacman.controllers.examples;
 
+import java.awt.Color;
+
 import mcts.UCT;
 import pacman.controllers.Controller;
 import pacman.game.Constants.MOVE;
 import pacman.game.Game;
+import pacman.game.GameView;
 
 public class MCTSPacMan extends Controller<MOVE>
 {
@@ -41,6 +44,8 @@ public class MCTSPacMan extends Controller<MOVE>
 		{
 			System.out.println("NO TIME FOR MCTS");
 		}
+		
+		GameView.addPoints(game,Color.CYAN, mcts.GetSelectedJuncs());
 		
 		// TODO Auto-generated method stub
 		return move;
