@@ -3,6 +3,7 @@ package reinforcementlearning;
 import java.util.ArrayList;
 
 import dataRecording.DataTuple;
+import dataRecording.HelperExtendedGame;
 import pacman.game.Constants.DM;
 import pacman.game.Constants.GHOST;
 import pacman.game.Constants.MOVE;
@@ -162,36 +163,22 @@ public class QPacmanState{
 		this(clone.my_game, clone.DirectionChosen);
 	}
 	
-	public int[] ClosestKJunctions(Game game, int k, int previous_index)
+	public int[] ClosestKJunctions(HelperExtendedGame helper, Game game, int k, int previous_index)
 	{
 		int[] closest_juncs = new int[k];
-		int[] inters = game.GetPillIntersection();
-		int[] juncs = game.GetJunctionPills();
+		int[] inters = helper.GetPillIntersection();
+		int[] juncs = helper.GetJunctionPills();
 		
 //		if(inters.length < 5)
 //		{
 //			inters = game.GetIntersections();
 //		}
 		
-		int[] mix = new int[inters.length + juncs.length];
+		int[] mix = helper.GetMixIndices();
 		
 		if(mix.length < 4)
 		{
-			mix = new int[game.getActivePillsIndices().length];
-			mix = game.getActivePillsIndices();
-		}
-		else
-		{
-		
-			int i = 0;
-			for(i = 0; i < inters.length; i++)
-			{
-				mix[i] = inters[i];
-			}
-			for(int j = 0; j < juncs.length; j++, i++)
-			{
-				mix[i] = juncs[j];
-			}
+			mix = helper.GetMixIndices();
 		}
 		
 		

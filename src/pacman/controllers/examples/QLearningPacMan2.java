@@ -38,8 +38,9 @@ public class QLearningPacMan2 extends Controller<MOVE>{
 		if(q_table.target == -1)
 		{
 			QPacmanState ps = new QPacmanState(game, game.getPacmanLastMoveMade());
+			q_table.UpdateState(game);
 			//String info = game.getGameState();
-			int[] juncs = ps.ClosestKJunctions(game, q_table.actionRange, q_table.previous_target);
+			int[] juncs = ps.ClosestKJunctions(q_table.helper, game, q_table.actionRange, q_table.previous_target);
 			q_table.previous_target = game.getPacmanCurrentNodeIndex();
 			q_table.target = juncs[q_table.getNextAction(ps.toString())];
 		}
@@ -58,7 +59,7 @@ public class QLearningPacMan2 extends Controller<MOVE>{
 	        	int dist = game.getShortestPathDistance(game.getPacmanCurrentNodeIndex(),
 						game.getGhostCurrentNodeIndex(ghost));
 	        	
-				if(dist<=10)
+				if(dist<=20)
 				{
 					q_table.target = -1;
 				}

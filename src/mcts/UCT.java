@@ -28,7 +28,7 @@ import pacman.game.Constants.MOVE;
 public class UCT {
 
 	private boolean DEBUG 			= false;
-	private int 	MAX_LEVEL_TIME 	= 8;
+	private int 	MAX_LEVEL_TIME 	= 80;
 	
 	/*
 	 * Maze used to control the game
@@ -78,6 +78,7 @@ public class UCT {
 	protected int ghost_time_multiplier = 1;
 	protected long timeDue;
 	protected long time_left;
+	protected boolean died = false;
 	private MOVE[] allMoves=MOVE.values();
 	
 	//Tactics
@@ -291,7 +292,7 @@ public class UCT {
 			}
 			
 			gen++;
-			st.advanceGame(StarterPacmanMove(st),randomGhostMovement(st));	
+			st.advanceGame(RandomPacmanMove(st),randomGhostMovement(st));	
 			
 			for(GHOST ghostType : GHOST.values())
 			{
@@ -321,6 +322,7 @@ public class UCT {
 //		if(maze.getReward(st) != 0.0f)
 //		System.out.println("GOT REWARD: " + maze.getReward(st));	
 		System.out.println("HOW LONG: " + gen);
+		died = st.wasPacManEaten();
 		return GetReward(st);
 	}
 	
@@ -328,8 +330,18 @@ public class UCT {
 	{
 		float reward = 0.0f;
 		
+//		if(!died)
+//		{
+//			reward = 1.0f;
+//		}
+//		
 		float ghost_reward = (float)(previous_ghost_eaten)/ 4.0f;
-		float pill_reward = (float)(previous_pp - st.getNumberOfActivePowerPills()) / (float)previous_pp;
+		float pill_reward = 0.0f;
+		if(previous_pp != 0)
+		{
+			pill_reward = (float)(previous_pp - st.getNumberOfActivePowerPills()) / (float)previous_pp;
+		}
+		
 		
 		System.out.println("pill_reward: " + pill_reward);
 		System.out.println("ghost_reward: " + ghost_reward);
@@ -498,10 +510,10 @@ public class UCT {
 		int action = UntriedAction(currentNode);
 		
 		Game current_state = currentNode.state.copy();
-		current_state = ExecutePathToTarget(GetJunction(allMoves[action], current_state), current_state);
+//		current_state = ExecutePathToTarget(GetJunction(allMoves[action], current_state), current_state);
 //		randomPacman.update(current_state.copy(),System.currentTimeMillis()+DELAY);
 //		randomGhost.update(current_state.copy(),System.currentTimeMillis()+DELAY);
-		//current_state.advanceGame(allMoves[action],randomGhostMovement(current_state));	
+		current_state.advanceGame(allMoves[action],randomGhostMovement(current_state));	
 		
 		/*
 		 * Create a child, set its fields and add it to currentNode.children

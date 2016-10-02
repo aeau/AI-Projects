@@ -85,7 +85,7 @@ public class Executor
 //		q.explorationChance = 0.0f;
 //		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
 //		DataManager.SaveQTable(q, "first_try.txt");
-		//exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
+//		exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
 		
 		//LOAD Q TABLE
 //		q = DataManager.LoadQTable("first_try.txt");
@@ -260,7 +260,7 @@ public class Executor
 		        game.advanceGame(pacManController.getMove(game.copy(),System.currentTimeMillis()+DELAY),
 		        		ghostController.getMove(game.copy(),System.currentTimeMillis()+DELAY));
 		        
-		        if(check_path)
+		        if(check_path && q.target != -1)
 		        {
 		        	int[] path = game.getShortestPath(game.getPacmanCurrentNodeIndex(), q.target);
 		        	 
@@ -332,22 +332,22 @@ public class Executor
 		        	check_path = true;
 		        }
 		        
-//		        for(GHOST ghost : GHOST.values())
-//				{
-//		        	if(game.getGhostLairTime(ghost) == 0 && game.getGhostEdibleTime(ghost)==0)
-//		        	{
-//			        	int dist = game.getShortestPathDistance(game.getPacmanCurrentNodeIndex(),
-//								game.getGhostCurrentNodeIndex(ghost));
-//			        	
-//						if(dist<=25)
-//						{
-//							accumulated_reward = 0;
-//							q.reward = -15;
-//							q.target = -1;
-//							check_path = true;
-//						}
-//		        	}
-//				}
+		        for(GHOST ghost : GHOST.values())
+				{
+		        	if(game.getGhostLairTime(ghost) == 0 && game.getGhostEdibleTime(ghost)==0)
+		        	{
+			        	int dist = game.getShortestPathDistance(game.getPacmanCurrentNodeIndex(),
+								game.getGhostCurrentNodeIndex(ghost));
+			        	
+						if(dist<=25)
+						{
+							accumulated_reward = 0;
+							q.reward = -15;
+							q.target = -1;
+							check_path = true;
+						}
+		        	}
+				}
 
 		        
 //		        if(same_pos != game.getPacmanCurrentNodeIndex())
@@ -745,9 +745,11 @@ public class Executor
 //	        		if(q.target != -1)
 //	        			GameView.addPoints(game, Color.GREEN,q.target);
 	        	
-	        	GameView.addPoints(game, Color.MAGENTA, game.GetPillIntersection());
-	        	GameView.addPoints(game, Color.CYAN, game.GetJunctionPills());
+//	        	GameView.addPoints(game, Color.MAGENTA, game.GetPillIntersection());
+//	        	GameView.addPoints(game, Color.CYAN, game.GetJunctionPills());
 	        	//GameView.addPoints(game, Color.CYAN, game.getJunctionIndices());
+	        	
+	        	GameView.addPoints(game, Color.CYAN, q.helper.GetMixPillIndices());
 	        	gv.repaint();
 	        	
 	        }

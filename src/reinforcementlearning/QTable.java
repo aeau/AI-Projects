@@ -3,6 +3,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 
+import dataRecording.HelperExtendedGame;
+import pacman.game.Game;
+
 /**
      * The heart of the Q-learning algorithm, the QTable contains the table
      * which maps states, actions and their Q values. This class has elaborate
@@ -18,6 +21,9 @@ import java.util.Random;
     	public int reward = 0;
     	public int target = -1;
     	public int previous_target = -1;
+    	
+    	//Extended game class object
+    	public HelperExtendedGame helper = new HelperExtendedGame();
     	
         /**
          * for creating random numbers
@@ -99,6 +105,11 @@ import java.util.Random;
         	reward = 0;
         	first_time = true;
         	target = -1;
+        }
+        
+        public void UpdateState(Game state)
+        {
+        	helper.SetState(state);
         }
 
         /**
