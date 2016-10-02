@@ -1,6 +1,7 @@
 package mcts;
 import static pacman.game.Constants.DELAY;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -12,7 +13,9 @@ import pacman.controllers.examples.AggressiveGhosts;
 import pacman.controllers.examples.RandomGhosts;
 import pacman.controllers.examples.RandomPacMan;
 import pacman.controllers.examples.StarterGhosts;
+import pacman.game.Constants;
 import pacman.game.Game;
+import pacman.game.GameView;
 import pacman.game.Constants.DM;
 import pacman.game.Constants.GHOST;
 import pacman.game.Constants.MOVE;
@@ -26,7 +29,13 @@ import pacman.game.Constants.MOVE;
  *
  */
 public class UCT {
-
+	
+	//TODO: CHECK EVERY JUNCTION IN THE CONTROLLER
+	//GIVE HUGE REWARD FOR EATING
+	//I think problem of the controller is that it calculates
+	//that after eat it won't be as good.
+	
+	
 	private boolean DEBUG 			= false;
 	private int 	MAX_LEVEL_TIME 	= 80;
 	
@@ -59,7 +68,7 @@ public class UCT {
 	/*
 	 * Computational limit
 	 */
-	protected final int maxIterations = 50;
+	protected final int maxIterations = 300;
 	
 	
 	//Random ghosts
@@ -74,11 +83,15 @@ public class UCT {
 	protected int previous_pills = 0;
 	protected int previous_pp = 0;
 	protected int previous_ghost_eaten = 0;
+	protected int ghost_eaten = 0;
 	protected int starting_time = 0;
 	protected int ghost_time_multiplier = 1;
 	protected long timeDue;
 	protected long time_left;
 	protected boolean died = false;
+	protected float ghost_divisor;
+	protected float pills_eaten;
+	protected int closest_ghost_dist;
 	private MOVE[] allMoves=MOVE.values();
 	
 	//Tactics
@@ -126,6 +139,7 @@ public class UCT {
              */
             rootNode = new MCTSNode(game.copy(), action_range, action);
             rootNode.maxChild = CalculateChildrenAndActions(rootNode);
+
             this.timeDue = timeDue;
             this.time_left = timeDue - System.currentTimeMillis();
 //            System.out.println("TIME LEFT AT BEGGINING: " + this.time_left);
@@ -265,13 +279,16 @@ public class UCT {
 	 */
 	private float DefaultPolicy() {
 		Game st = currentNode.state.copy();
+		Game previous_state = st;
 		Game root_state = rootNode.state.copy();
 		previous_score = root_state.getScore();
 		previous_pills = root_state.getNumberOfActivePills();
-		previous_pp = root_state.getNumberOfActivePowerPills();
-		previous_ghost_eaten = 0;
-		starting_time = st.getCurrentLevelTime();
+		previous_pp = st.getNumberOfActivePowerPills();
+		previous_ghost_eaten = st.getNumGhostsEaten();
+		ghost_eaten = 0;
+		starting_time = root_state.getCurrentLevelTime();
 		ghost_time_multiplier = 1;
+		pills_eaten = 0.0f;
 		HashMap<GHOST, Integer> edible_table = new HashMap<GHOST, Integer>();
 		
 		int gen = 0;
@@ -284,28 +301,29 @@ public class UCT {
 			//Check ghost edible and time
 			for(GHOST ghostType : GHOST.values())
 			{
-				if(st.wasGhostEaten(ghostType) && edible_table.containsKey(ghostType))
+				if(st.wasGhostEaten(ghostType))
 				{
-					ghost_time_multiplier += edible_table.get(ghostType);
-					previous_ghost_eaten++;
+					ghost_time_multiplier += previous_state.getGhostEdibleTime(ghostType);
+					ghost_eaten++;
+//					ghost_time_multiplier += edible_table.get(ghostType);
+//					previous_ghost_eaten++;
 				}
 			}
-			
+			previous_state = st.copy();
 			gen++;
-			st.advanceGame(RandomPacmanMove(st),randomGhostMovement(st));	
+			st.advanceGame(StarterPacmanMove(st),AggressiveGhostMovement(st));	
 			
-			for(GHOST ghostType : GHOST.values())
-			{
-				if(st.isGhostEdible(ghostType))
-				{
-					edible_table.put(ghostType, st.getGhostEdibleTime(ghostType));
-					//System.out.println("EDIBLE SCORE OF " + ghostType + " IS: " + st.getGhostEdibleTime(ghostType));
-				}
-			}
+			if(st.wasPillEaten()) pills_eaten+=1.0f;
 			
-			if(ghost_time_multiplier != 1)
-				System.out.println("GHOST EDIBLE TIME MULTIPLIER: " + ghost_time_multiplier);
-			
+//			for(GHOST ghostType : GHOST.values())
+//			{
+//				if(st.isGhostEdible(ghostType))
+//				{
+//					edible_table.put(ghostType, st.getGhostEdibleTime(ghostType));
+//					//System.out.println("EDIBLE SCORE OF " + ghostType + " IS: " + st.getGhostEdibleTime(ghostType));
+//				}
+//			}
+
 //			if(TerminalState(st))
 //			{
 //				break;
@@ -321,6 +339,20 @@ public class UCT {
 		}
 //		if(maze.getReward(st) != 0.0f)
 //		System.out.println("GOT REWARD: " + maze.getReward(st));	
+		
+		int min_dist = Integer.MAX_VALUE;
+		for(GHOST ghost : GHOST.values())
+		{
+			int dist = previous_state.getShortestPathDistance(previous_state.getPacmanCurrentNodeIndex(),st.getGhostCurrentNodeIndex(ghost));
+			if(dist < min_dist)
+			{
+				min_dist = dist;
+				closest_ghost_dist = dist;
+//				ghost_time_multiplier += edible_table.get(ghostType);
+//				previous_ghost_eaten++;
+			}
+		}
+		
 		System.out.println("HOW LONG: " + gen);
 		died = st.wasPacManEaten();
 		return GetReward(st);
@@ -329,44 +361,75 @@ public class UCT {
 	public float GetReward(Game st)
 	{
 		float reward = 0.0f;
-		
-//		if(!died)
-//		{
-//			reward = 1.0f;
-//		}
-//		
-		float ghost_reward = (float)(previous_ghost_eaten)/ 4.0f;
+		float ghost_reward = 0.0f;
 		float pill_reward = 0.0f;
-		if(previous_pp != 0)
+//		previous_ghost_eaten = st.getNumGhostsEaten();
+//		System.out.println("previous_ghost_eaten: " + previous_ghost_eaten);
+		
+		if(!died)
 		{
-			pill_reward = (float)(previous_pp - st.getNumberOfActivePowerPills()) / (float)previous_pp;
+			reward = 1.0f;
 		}
 		
-		
-		System.out.println("pill_reward: " + pill_reward);
-		System.out.println("ghost_reward: " + ghost_reward);
-		if(pill_reward > 0.0f)
+		if (pills_eaten > 0 && previous_pills > 0) {
+			//
+			pill_reward = pills_eaten / (float)previous_pills;
+		}
+			
+		if(ghost_eaten > 0)
 		{
-			if(ghost_reward < 0.2f)
+			
+//			ghost_reward = ((float)(previous_ghost_eaten) / 4.0f)* ghost_time_multiplier;
+			ghost_reward = (ghost_eaten * ghost_time_multiplier);// - closest_ghost_dist;
+			ghost_reward += previous_ghost_eaten * 100.0f;
+			System.out.println("GHOST REWARD: " + ghost_reward);
+			if (ghost_eaten >= 2) {
+				pill_reward += ghost_reward;
+			}
+			else if(previous_pp > st.getNumberOfActivePowerPills())
 			{
 				pill_reward = 0.0f;
+//				ghost_reward = 0.0f;
 			}
-			else
-			{
-				pill_reward += ((float)(previous_pills - st.getNumberOfActivePills()) / (float)previous_pills) + ghost_reward;
+		}
+		 else if (previous_pp > st.getNumberOfActivePowerPills()) {
+			 	pill_reward = 0.0f;
 			}
-			
-		}
-		else
-		{
-			pill_reward += (float)(previous_pills - st.getNumberOfActivePills()) / (float)previous_pills;
-		}
 		
+		reward += pill_reward + ghost_reward;
 		
-		reward += pill_reward;
-		reward += ghost_reward * ghost_time_multiplier; //ghosts
+////		 = (float)(previous_ghost_eaten)/ 4.0f;
+//		
+//		if(previous_pp != 0)
+//		{
+//			pill_reward = (float)(previous_pp - st.getNumberOfActivePowerPills()) / (float)previous_pp;
+//		}
+//		
+//		
+//		System.out.println("pill_reward: " + pill_reward);
+//		System.out.println("ghost_reward: " + ghost_reward);
+//		if(pill_reward > 0.0f)
+//		{
+//			if(ghost_reward < 0.2f)
+//			{
+//				pill_reward = 0.0f;
+//			}
+//			else
+//			{
+//				pill_reward += ((float)(previous_pills - st.getNumberOfActivePills()) / (float)previous_pills) + ghost_reward;
+//			}
+//			
+//		}
+//		else
+//		{
+//			pill_reward += (float)(previous_pills - st.getNumberOfActivePills()) / (float)previous_pills;
+//		}
+//		
+//		
+//		reward += pill_reward;
+//		reward += ghost_reward * ghost_time_multiplier; //ghosts
 		
-		System.out.println("FINAL REWARD: " + reward);
+//		System.out.println("FINAL REWARD: " + reward);
 		
 //		reward = st.getScore() - previous_score;
 //		reward += (st.getNumGhostsEaten() - previous_ghost_eaten) * 200;
@@ -611,10 +674,26 @@ public class UCT {
 //        return allMoves[action];
 	}
 	
-	public EnumMap<GHOST,MOVE> randomGhostMovement(Game st)
+	public EnumMap<GHOST,MOVE> AggressiveGhostMovement(Game st)
 	{
 		EnumMap<GHOST,MOVE> moves=new EnumMap<GHOST,MOVE>(GHOST.class);
 		
+		for(GHOST ghost : GHOST.values())				//for each ghost
+			if(st.doesGhostRequireAction(ghost))		//if it requires an action
+			{
+				if(random.nextFloat()<1.0f)	//approach/retreat from the current node that Ms Pac-Man is at
+					moves.put(ghost,st.getApproximateNextMoveTowardsTarget(st.getGhostCurrentNodeIndex(ghost),
+							st.getPacmanCurrentNodeIndex(),st.getGhostLastMoveMade(ghost),DM.PATH));
+				else									//else take a random action
+					moves.put(ghost,allMoves[random.nextInt(allMoves.length)]);
+			}
+
+		return moves;
+	}
+	
+	public EnumMap<GHOST,MOVE> randomGhostMovement(Game st)
+	{
+		EnumMap<GHOST,MOVE> moves=new EnumMap<GHOST,MOVE>(GHOST.class);
 		for(GHOST ghostType : GHOST.values())
 		{
 			if(game.doesGhostRequireAction(ghostType))
@@ -636,7 +715,6 @@ public class UCT {
 		
 		selected_action = n.untried_actions.get(selected_index);
 		n.untried_actions.remove(selected_index);
-		
 		return selected_action;
 	}
 
@@ -660,7 +738,7 @@ public class UCT {
 	{
 		Game st = n.state;
 		//Just checking if possible no for ghost
-		return ((n.opposite_parent != action) || st.getNeighbour(st.getPacmanCurrentNodeIndex(), MOVE.values()[action]) != -1);
+		return ((n.opposite_parent != action) && st.getNeighbour(st.getPacmanCurrentNodeIndex(), MOVE.values()[action]) != -1);
 	}
 	
 	public boolean isValidMove(int action, Game st)
