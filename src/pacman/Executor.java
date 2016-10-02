@@ -26,6 +26,7 @@ import pacman.controllers.examples.AggressiveGhosts;
 import pacman.controllers.examples.BehaviorTreePacMan;
 import pacman.controllers.examples.Legacy;
 import pacman.controllers.examples.Legacy2TheReckoning;
+import pacman.controllers.examples.MCTSPacMan;
 import pacman.controllers.examples.NearestPillPacMan;
 import pacman.controllers.examples.NearestPillPacManVS;
 import pacman.controllers.examples.NeuralNetworkPacMan;
@@ -63,13 +64,18 @@ public class Executor
 		Executor exec=new Executor();
 		boolean visual = true;
 		int numTrials=2000;
+		int delay=5;
 		
 		//HUMAN TEST
 		//exec.runGameTimed(new HumanController(new KeyBoardInput()),new StarterGhosts(),visual);
 		
+		//FOR MONTE CARLO TREE SEARCH
+		exec.runGameTimed(new MCTSPacMan(),new StarterGhosts(),visual);	
+//		exec.runGame(new MCTSPacMan(),new StarterGhosts(),visual, delay);	
+		
 		//FOR REINFORCEMENT LEARNING
 		
-		QTable q = new QTable(4);
+//		QTable q = new QTable(4);
 		
 //		exec.runExperimentReinforcementLearning(new QLearningPacMan(q),new StarterGhosts(),numTrials, q);
 //		q.explorationChance = 0.0f;
@@ -82,9 +88,9 @@ public class Executor
 		//exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
 		
 		//LOAD Q TABLE
-		q = DataManager.LoadQTable("first_try.txt");
-		q.explorationChance = 0.0f;
-		exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
+//		q = DataManager.LoadQTable("first_try.txt");
+//		q.explorationChance = 0.0f;
+//		exec.runGameTimedRLTest(new QLearningPacMan2(q),new StarterGhosts(),visual, q);	
 		
 		//FOR NEURAL NETWORKS
 
