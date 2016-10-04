@@ -185,6 +185,126 @@ public class HelperExtendedGame
 		return intersections;
 	}
 	
+	public boolean IsJunction(int node)
+	{
+		int[] juncs = current_state.getJunctionIndices();
+		
+		for(int j : juncs)
+		{
+			if(node == j)
+				return true;
+		}
+		
+		return false;
+	}
+	
+	public boolean IsIntersection(int node)
+	{
+		int[] inters = GetIntersections();
+		
+		for(int i : inters)
+		{
+			if(node == i)
+				return true;
+		}
+		
+		return false;
+	}
+	
+	public int NextJunctionTowardMovement(int junction, MOVE move)
+	{
+		MOVE movement = move;
+		int next_movement = current_state.getNeighbour(junction, movement);
+		
+		if(next_movement == -1)
+		{
+			return junction;
+		}
+		
+		while(!IsJunction(next_movement))
+		{
+			next_movement = current_state.getNeighbour(next_movement, movement);
+			
+			if(IsIntersection(next_movement))
+			{
+				intersection:
+				for(MOVE m : MOVE.values())
+				{
+					if(m == movement || m == movement.opposite())
+					{
+						continue intersection;
+					}
+					else if(current_state.getNeighbour(next_movement, m) != -1)
+					{
+						movement = m;
+						break intersection;
+					}
+				}
+			}
+			
+			if(next_movement == -1)
+			{
+				return junction;
+			}
+			
+		}
+		
+		return next_movement;
+	}
+	
+	public int NextJunctionORIntersectionTowardMovement(int junction, MOVE move)
+	{
+		MOVE movement = move;
+		int next_movement = current_state.getNeighbour(junction, movement);
+		
+		if(next_movement == -1)
+		{
+			return junction;
+		}
+		
+		while(!IsJunction(next_movement) && !IsIntersection(next_movement))
+		{
+			next_movement = current_state.getNeighbour(next_movement, movement);
+		}
+		
+		return next_movement;
+	}
+	
+	public MOVE JunctionConnectedToPath(Game st, int junction, int... path)
+	{
+		
+		for(int i = 0; i < 4; i++)
+		{
+			MOVE probable_move = MOVE.values()[i];
+			int next_index = st.getNeighbour(junction, probable_move);
+			
+			if(next_index == -1)
+				continue;
+			
+			while(next_index != -1)
+			{
+				if(PointInPath(next_index))
+				{
+					return probable_move;
+				}
+				next_index = st.getNeighbour(next_index, probable_move);
+			}
+			
+		}
+		
+		return null;
+	}
+	
+	private boolean PointInPath(int index, int... path)
+	{
+		for(int p : path)
+		{
+			if(index == p)
+				return true;
+		}
+		
+		return false;
+	}
 	
 	/**
 	 * Get closest junction EXCLUDING previous junction i was and current (if i was)

@@ -4,6 +4,7 @@ import java.awt.Color;
 
 import mcts.UCT;
 import pacman.controllers.Controller;
+import pacman.game.Constants.DM;
 import pacman.game.Constants.MOVE;
 import pacman.game.Game;
 import pacman.game.GameView;
@@ -21,21 +22,33 @@ public class MCTSPacMan extends Controller<MOVE>
 	@Override
 	public MOVE getMove(Game game, long timeDue) 
 	{
+//		System.out.println("WTF");
 		mcts.SetGame(game);
 		MOVE move = MOVE.NEUTRAL;
 		
-		if(!game.wasPacManEaten())
+		if(mcts.helper.IsIntersection(game.getPacmanCurrentNodeIndex()) ||
+				mcts.helper.IsJunction(game.getPacmanCurrentNodeIndex()) 	)
 		{
-			try {
-				move = mcts.runUCT(previous_action, timeDue);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if(!game.wasPacManEaten())
+			{
+				try {
+					move = mcts.runUCT(previous_action, timeDue);
+					move = game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), mcts.target, DM.PATH);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			else
+			{
+				move = MOVE.NEUTRAL;
 			}
 		}
 		else
 		{
-			move = MOVE.NEUTRAL;
+			
+			//move = MOVE.values()[previous_action];
+			move = game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), mcts.target, DM.PATH);
 		}
 		
 		previous_action = move.ordinal();
@@ -46,7 +59,8 @@ public class MCTSPacMan extends Controller<MOVE>
 		}
 		
 		GameView.addPoints(game,Color.CYAN, mcts.GetSelectedJuncs());
-		
+		GameView.addPoints(game,Color.BLUE, mcts.target);
+//		GameView.addPoints(game,Color.CYAN, mcts.helper.GetIntersections());
 		// TODO Auto-generated method stub
 		return move;
 	}

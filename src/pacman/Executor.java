@@ -71,6 +71,7 @@ public class Executor
 		
 		//FOR MONTE CARLO TREE SEARCH
 		exec.runGameTimed(new MCTSPacMan(),new StarterGhosts(),visual);	
+//		exec.runGameTimed(new MCTSPacMan(),new Legacy2TheReckoning(),visual);	
 //		exec.runGame(new MCTSPacMan(),new StarterGhosts(),visual, delay);	
 		
 		//FOR REINFORCEMENT LEARNING

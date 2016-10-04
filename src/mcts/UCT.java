@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import dataRecording.HelperExtendedGame;
 import pacman.controllers.Controller;
 import pacman.controllers.examples.AggressiveGhosts;
 import pacman.controllers.examples.RandomGhosts;
@@ -38,6 +39,8 @@ public class UCT {
 	
 	private boolean DEBUG 			= false;
 	private int 	MAX_LEVEL_TIME 	= 80;
+	private int 	MAX_DEPTH		= 55;
+	protected final int MAX_ITERATIONS = 300;
 	
 	/*
 	 * Maze used to control the game
@@ -64,13 +67,7 @@ public class UCT {
 	 * Exploration coefficient
 	 */
 	private float C = (float) Math.sqrt(2);
-	
-	/*
-	 * Computational limit
-	 */
-	protected final int maxIterations = 300;
-	
-	
+
 	//Random ghosts
 	//Random PACMAN
 	public Controller<MOVE> randomPacman;
@@ -93,7 +90,15 @@ public class UCT {
 	protected float pills_eaten;
 	protected int closest_ghost_dist;
 	private MOVE[] allMoves=MOVE.values();
+	private int current_depth  =0;
+	private int child_depth = 0;
+	public int target = 0;
+	public HelperExtendedGame helper;
 	
+	//need to be set
+	private int[] current_pacman_path = new int[0];
+	private MOVE current_pacman_action= null;
+
 	//Tactics
 	enum Tactics
 	{
@@ -111,6 +116,7 @@ public class UCT {
 	public UCT()
 	{
 		tactic = Tactics.PILL;
+		helper = new HelperExtendedGame();
 		
 //		randomPacman = new RandomPacMan();
 //		randomGhost = new RandomGhosts();
@@ -123,6 +129,7 @@ public class UCT {
 	public void SetGame(Game game)
 	{
 		this.game = game;
+		helper.SetState(game);
 	}
 	
 	/**
@@ -132,7 +139,7 @@ public class UCT {
 	 */
 	public MOVE runUCT(int action, long timeDue) throws InterruptedException{
 		
-		juncs.clear();
+			juncs.clear();
 		
             /*
              * Create root node with the present state
@@ -164,7 +171,9 @@ public class UCT {
             //and we apply the exploitation of it to find the child with the highest average reward
 //            time_left = timeDue - System.currentTimeMillis();
 //            System.out.println("TIME LEFT BEFORE ACTION SELECTED: " + time_left);
+            
             MOVE bestAction = BestChild(0.0f).pacman_move;
+            target = currentNode.target_junction;
 //            time_left = timeDue - System.currentTimeMillis();
 //            System.out.println("TIME LEFT AFTER ACTION SELECTED: " + time_left);
             return bestAction;
@@ -176,12 +185,12 @@ public class UCT {
 	 */
 	private void TreePolicy() {
 		currentNode = rootNode;
+		current_depth = currentNode.path_cost;
 		
 		Game st = currentNode.state.copy();
 		pacman_lives = st.getPacmanNumberOfLivesRemaining();
-		while(!TerminalState(st) && !Terminate(0))
+		while(!TerminalState(st) && !Terminate(0) && !DepthReached(0))
 		{
-			
 			if(!currentNode.IsFullyExpanded())
 			{
 				currentNode = Expand();
@@ -190,6 +199,7 @@ public class UCT {
 			else
 			{
 				currentNode = BestChild(C);
+				current_depth += currentNode.path_cost;
 			}
 			
 			st = currentNode.state.copy();
@@ -209,6 +219,9 @@ public class UCT {
 		Game returning_state = st.copy();
 		int[] path = returning_state.getShortestPath(st.getPacmanCurrentNodeIndex(), junction_node);
 		System.out.println("WE START THE PLAY");
+		child_depth = path.length;
+		target = junction_node;
+		current_pacman_path = path;
 		for(int p : path)
 		{
 			int pacman_position = returning_state.getPacmanCurrentNodeIndex();
@@ -217,11 +230,24 @@ public class UCT {
 			{
 				System.out.println("PACMAN DEAD in node: " + pacman_position);
 				System.out.println("OLD PACMAN POS: " + st.getPacmanCurrentNodeIndex());
+//				this.juncs.remove(this.juncs.size() - 1);
+//				this.juncs.add(junction_node);
 				return st;
 			}
+			
+			for(GHOST ghost : GHOST.values())
+			{
+				if(returning_state.wasPowerPillEaten() || returning_state.wasGhostEaten(ghost))
+				{
+					return returning_state;
+				}
+			}
+			
+				
+				
 //			System.out.println("next position: " + p);
 //			System.out.println("current_position: " + pacman_position);
-			returning_state.advanceGame(returning_state.getNextMoveTowardsTarget(pacman_position, p,DM.PATH),randomGhostMovement(returning_state));
+			returning_state.advanceGame(returning_state.getNextMoveTowardsTarget(pacman_position, p,DM.PATH),GhostPlayout(returning_state));
 		}
 		
 		return returning_state;
@@ -229,8 +255,13 @@ public class UCT {
 	
 	private int GetJunction(MOVE move, Game st)
 	{
-		int next_index = st.getNeighbour(st.getPacmanCurrentNodeIndex(), move);
-		return ClosestJunction(st, st.getPacmanCurrentNodeIndex(), next_index);
+		
+//		int index = helper.NextJunctionTowardMovement(st.getPacmanCurrentNodeIndex(), move);
+		int index = helper.NextJunctionORIntersectionTowardMovement(st.getPacmanCurrentNodeIndex(), move);
+		this.juncs.add(index);
+		return index;
+//		int next_index = st.getNeighbour(st.getPacmanCurrentNodeIndex(), move);
+//		return ClosestJunction(st, st.getPacmanCurrentNodeIndex(), next_index);
 		
 	}
 	
@@ -311,7 +342,7 @@ public class UCT {
 			}
 			previous_state = st.copy();
 			gen++;
-			st.advanceGame(StarterPacmanMove(st),AggressiveGhostMovement(st));	
+			st.advanceGame(RandomPacmanMove(st),GhostPlayout(st));	
 			
 			if(st.wasPillEaten()) pills_eaten+=1.0f;
 			
@@ -482,10 +513,15 @@ public class UCT {
 	private int CalculateChildrenAndActions(MCTSNode n)
 	{
 		int children = 0;
-		if(n.parent != null)
-		{
-			n.opposite_parent = n.parent.pacman_move.opposite().ordinal();
-		}
+//		if(n.parent != null)
+//		{
+//			n.opposite_parent = n.parent.pacman_move.opposite().ordinal();
+//		}
+//		if(n.parent == null)
+//		{
+//			n.opposite_parent = n.pacman_move.opposite().ordinal();
+//		}
+		
 		for (int i=0;i<n.maxChild;i++)
 		{
 
@@ -571,12 +607,12 @@ public class UCT {
 		 * Choose untried action
 		 */
 		int action = UntriedAction(currentNode);
-		
+		current_pacman_action = allMoves[action];
 		Game current_state = currentNode.state.copy();
-//		current_state = ExecutePathToTarget(GetJunction(allMoves[action], current_state), current_state);
+		current_state = ExecutePathToTarget(GetJunction(allMoves[action], current_state), current_state);
 //		randomPacman.update(current_state.copy(),System.currentTimeMillis()+DELAY);
 //		randomGhost.update(current_state.copy(),System.currentTimeMillis()+DELAY);
-		current_state.advanceGame(allMoves[action],randomGhostMovement(current_state));	
+//		current_state.advanceGame(allMoves[action],randomGhostMovement(current_state));	
 		
 		/*
 		 * Create a child, set its fields and add it to currentNode.children
@@ -586,6 +622,8 @@ public class UCT {
 		currentNode.children.add(child);
 		child.parent = currentNode;
 		child.maxChild = CalculateChildrenAndActions(child);
+		child.SetPathCost(child_depth);
+		child.target_junction = target;
 		return child;
 		
 	}
@@ -696,8 +734,63 @@ public class UCT {
 		EnumMap<GHOST,MOVE> moves=new EnumMap<GHOST,MOVE>(GHOST.class);
 		for(GHOST ghostType : GHOST.values())
 		{
-			if(game.doesGhostRequireAction(ghostType))
+			if(st.doesGhostRequireAction(ghostType))
 				moves.put(ghostType,allMoves[random.nextInt(allMoves.length)]);
+		}
+		
+		return moves;
+	}
+	
+	public EnumMap<GHOST, MOVE> GhostPlayout(Game st)
+	{
+		EnumMap<GHOST,MOVE> moves=new EnumMap<GHOST,MOVE>(GHOST.class);
+		for(GHOST ghost : GHOST.values())
+		{
+			if(st.doesGhostRequireAction(ghost))
+			{
+				int currentIndex=st.getGhostCurrentNodeIndex(ghost);
+				int current_pacman_pos = st.getPacmanCurrentNodeIndex();
+				if(!st.isGhostEdible(ghost)) //case 1
+				{
+					if(st.getShortestPathDistance(current_pacman_pos,currentIndex)< 10)
+					{
+						moves.put(ghost,st.getApproximateNextMoveTowardsTarget(currentIndex,current_pacman_pos,st.getGhostLastMoveMade(ghost),DM.PATH));   
+						continue;
+					}
+					
+					MOVE m = helper.JunctionConnectedToPath(st, currentIndex, current_pacman_path);
+					
+					if(m != null)
+					{
+						moves.put(ghost, m);
+					}
+					else
+					{
+						if(random.nextInt(100) > 50)//front
+						{
+							moves.put(ghost,
+									st.getApproximateNextMoveTowardsTarget(
+																			currentIndex, 
+																			helper.NextJunctionTowardMovement(current_pacman_pos, current_pacman_action),
+																			st.getGhostLastMoveMade(ghost),DM.PATH));
+						}
+						else //back
+						{
+							moves.put(ghost,
+									st.getApproximateNextMoveTowardsTarget(
+																			currentIndex, 
+																			helper.NextJunctionTowardMovement(current_pacman_pos, current_pacman_action.opposite()),
+																			st.getGhostLastMoveMade(ghost),DM.PATH));
+						}
+					}
+
+				}
+				else //escape
+				{
+					moves.put(ghost,st.getApproximateNextMoveTowardsTarget(currentIndex,current_pacman_pos,st.getGhostLastMoveMade(ghost),DM.PATH));   
+				} //missing case to don't have followers
+			}
+				
 		}
 		
 		return moves;
@@ -731,7 +824,12 @@ public class UCT {
 //		{
 //			System.out.println("I WAS CALLED FROM: " + function + "; TIME LEFT: " + this.time_left + "; BEFORE CALCULATING: " + p);
 //		}
-		return (i>maxIterations) || this.time_left < 5;
+		return (i>MAX_ITERATIONS) || this.time_left < 5;
+	}
+	
+	private boolean DepthReached(int extra_value)
+	{
+		return (current_depth + extra_value) > MAX_DEPTH;
 	}
 	
 	public boolean isValidMove(int action, MCTSNode n)

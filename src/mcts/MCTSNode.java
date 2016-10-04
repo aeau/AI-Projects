@@ -26,6 +26,8 @@ public class MCTSNode{
 	public int maxChild;
 	public int move = 0;
 	public MOVE pacman_move;
+	public int path_cost = 0;
+	public int target_junction = 0;
 	
 	MCTSNode(Game state, int range, int action){
 		this.state = state;
@@ -33,9 +35,14 @@ public class MCTSNode{
 		move = action;
 		pacman_move = MOVE.values()[move];
 	}
+	
+	public void SetPathCost(int value)
+	{
+		path_cost = value;
+	}
 
 	public boolean IsFullyExpanded()
 	{
-		return children.size() == maxChild;
+		return untried_actions.isEmpty();
 	}
 }
