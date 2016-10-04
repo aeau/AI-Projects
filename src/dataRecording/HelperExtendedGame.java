@@ -3,6 +3,7 @@ package dataRecording;
 import java.util.ArrayList;
 
 import pacman.game.Game;
+import pacman.game.Constants.GHOST;
 import pacman.game.Constants.MOVE;
 
 public class HelperExtendedGame 
@@ -293,6 +294,70 @@ public class HelperExtendedGame
 		}
 		
 		return null;
+	}
+	
+	public boolean IsPathSafe(Game st, int... path)
+	{
+		for(int p : path)
+		{
+			for(GHOST ghost : GHOST.values())
+			{
+				if(!st.isGhostEdible(ghost) && st.getGhostCurrentNodeIndex(ghost) == p)
+				{
+					return false;
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	
+	//MAYBE CHECK HEADING OF GHOST
+	//CHECK THIS NIG
+	public boolean WillGhostsArriveFirst(Game st, int target)
+	{
+		int min_dist = st.getShortestPathDistance(st.getPacmanCurrentNodeIndex(), target);
+		
+		for(GHOST ghost : GHOST.values())
+		{
+			if(	st.getGhostLairTime(ghost) == 0 &&
+				!st.isGhostEdible(ghost) &&
+				st.getShortestPathDistance(st.getGhostCurrentNodeIndex(ghost), target) <= min_dist)
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public int PillsInPath(Game st, int...path)
+	{
+		int pills = 0;
+		for(int p : path)
+		{
+			int pill = st.getPillIndex(p);
+			if(pill != -1)
+			{
+				if(st.isPillStillAvailable(pill))
+				{
+					pills++;
+					continue;
+				}
+			}
+			pill = st.getPowerPillIndex(p);
+			if(pill != -1)
+			{
+				if(st.isPowerPillStillAvailable(pill))
+				{
+					pills++;
+					continue;
+				}
+			}
+		}
+		
+		return pills;
 	}
 	
 	private boolean PointInPath(int index, int... path)

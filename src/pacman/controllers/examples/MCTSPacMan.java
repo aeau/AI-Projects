@@ -13,6 +13,7 @@ public class MCTSPacMan extends Controller<MOVE>
 {
 	public UCT mcts = new UCT();
 	public int previous_action = 0;
+	boolean reverse = false;
 	
 	public MCTSPacMan()
 	{
@@ -34,6 +35,7 @@ public class MCTSPacMan extends Controller<MOVE>
 				try {
 					move = mcts.runUCT(previous_action, timeDue);
 					move = game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), mcts.target, DM.PATH);
+					reverse = false;
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -46,7 +48,19 @@ public class MCTSPacMan extends Controller<MOVE>
 		}
 		else
 		{
+			mcts.current_pacman_path = game.getShortestPath(game.getPacmanCurrentNodeIndex(), mcts.target);
 			
+			if(!reverse)
+			{
+				if(!mcts.helper.IsPathSafe(game, mcts.current_pacman_path))
+				{
+					reverse = true;
+					int aux = mcts.target;
+					mcts.target = mcts.previous_target;
+					mcts.previous_target = game.getPacmanCurrentNodeIndex();
+					mcts.current_pacman_path = game.getShortestPath(mcts.previous_target, mcts.target);
+				}
+			}
 			//move = MOVE.values()[previous_action];
 			move = game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), mcts.target, DM.PATH);
 		}

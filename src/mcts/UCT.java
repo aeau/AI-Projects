@@ -5,7 +5,9 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import dataRecording.HelperExtendedGame;
@@ -38,7 +40,7 @@ public class UCT {
 	
 	
 	private boolean DEBUG 			= false;
-	private int 	MAX_LEVEL_TIME 	= 80;
+	private int 	MAX_LEVEL_TIME 	= 300;
 	private int 	MAX_DEPTH		= 55;
 	protected final int MAX_ITERATIONS = 300;
 	
@@ -92,11 +94,21 @@ public class UCT {
 	private MOVE[] allMoves=MOVE.values();
 	private int current_depth  =0;
 	private int child_depth = 0;
-	public int target = 0;
+
 	public HelperExtendedGame helper;
 	
+	//FOR PACMAN REAL MOVEMENT
+	public int target = 0;
+	public int previous_target = 0;
+	
+	//FOR PACMAN MOVEMENT in playout
+	private int past_selection = 0;
+	private int current_selection = 0;
+	private boolean reverse = false;
+	
+	
 	//need to be set
-	private int[] current_pacman_path = new int[0];
+	public int[] current_pacman_path = new int[0];
 	private MOVE current_pacman_action= null;
 
 	//Tactics
@@ -173,7 +185,9 @@ public class UCT {
 //            System.out.println("TIME LEFT BEFORE ACTION SELECTED: " + time_left);
             
             MOVE bestAction = BestChild(0.0f).pacman_move;
+            previous_target = this.game.getPacmanCurrentNodeIndex();
             target = currentNode.target_junction;
+            current_pacman_path = game.getShortestPath(previous_target, target);
 //            time_left = timeDue - System.currentTimeMillis();
 //            System.out.println("TIME LEFT AFTER ACTION SELECTED: " + time_left);
             return bestAction;
@@ -256,8 +270,8 @@ public class UCT {
 	private int GetJunction(MOVE move, Game st)
 	{
 		
-//		int index = helper.NextJunctionTowardMovement(st.getPacmanCurrentNodeIndex(), move);
 		int index = helper.NextJunctionORIntersectionTowardMovement(st.getPacmanCurrentNodeIndex(), move);
+//		int index = helper.NextJunctionORIntersectionTowardMovement(st.getPacmanCurrentNodeIndex(), move);
 		this.juncs.add(index);
 		return index;
 //		int next_index = st.getNeighbour(st.getPacmanCurrentNodeIndex(), move);
@@ -324,6 +338,11 @@ public class UCT {
 		
 		int gen = 0;
 		
+		//FOR CONTROLLER
+		past_selection = 0;
+		current_selection = 0;
+		boolean first_time = true;
+		
 		while(!TerminalState(st) && !Terminate(0))
 		{
 //			randomPacman.update(st,this.time_left);
@@ -342,7 +361,43 @@ public class UCT {
 			}
 			previous_state = st.copy();
 			gen++;
-			st.advanceGame(RandomPacmanMove(st),GhostPlayout(st));	
+			
+			//LETS HAVE SOME FUN PACMAN &&& GHOSTS :D;
+			if(first_time)
+			{
+				first_time = false;
+				past_selection = st.getPacmanCurrentNodeIndex();
+				current_selection = PacmanPlayoutJunction(st);
+			}
+			else
+			{
+				if(helper.IsJunction(st.getPacmanCurrentNodeIndex()) ||
+						helper.IsIntersection(st.getPacmanCurrentNodeIndex()))
+				{
+					past_selection = st.getPacmanCurrentNodeIndex();
+					current_selection = PacmanPlayoutJunction(st);
+					current_pacman_path = st.getShortestPath(past_selection, current_selection);
+					reverse = false;
+				}
+				else
+				{
+					current_pacman_path = game.getShortestPath(game.getPacmanCurrentNodeIndex(), current_selection);
+					int index = PacmanPlayoutPath(st, current_pacman_path);
+					
+					if(index != -1)
+					{
+						past_selection = st.getPacmanCurrentNodeIndex();
+						current_selection = index;
+						current_pacman_path = st.getShortestPath(past_selection, current_selection);
+					}
+				}
+			}
+			
+			
+			current_pacman_action = st.getNextMoveTowardsTarget(st.getPacmanCurrentNodeIndex(), current_selection, DM.PATH);
+			
+			
+			st.advanceGame(current_pacman_action,GhostPlayout(st));	
 			
 			if(st.wasPillEaten()) pills_eaten+=1.0f;
 			
@@ -412,20 +467,21 @@ public class UCT {
 			
 //			ghost_reward = ((float)(previous_ghost_eaten) / 4.0f)* ghost_time_multiplier;
 			ghost_reward = (ghost_eaten * ghost_time_multiplier);// - closest_ghost_dist;
-			ghost_reward += previous_ghost_eaten * 100.0f;
+//			ghost_reward += previous_ghost_eaten * 100.0f;
 			System.out.println("GHOST REWARD: " + ghost_reward);
-			if (ghost_eaten >= 2) {
+			if (ghost_eaten > 1) {
 				pill_reward += ghost_reward;
 			}
 			else if(previous_pp > st.getNumberOfActivePowerPills())
 			{
 				pill_reward = 0.0f;
+				ghost_reward = 0.0f;
 //				ghost_reward = 0.0f;
 			}
 		}
-		 else if (previous_pp > st.getNumberOfActivePowerPills()) {
-			 	pill_reward = 0.0f;
-			}
+//		 else if (previous_pp > st.getNumberOfActivePowerPills()) {
+//			 	pill_reward = 0.0f;
+//			}
 		
 		reward += pill_reward + ghost_reward;
 		
@@ -513,14 +569,14 @@ public class UCT {
 	private int CalculateChildrenAndActions(MCTSNode n)
 	{
 		int children = 0;
-//		if(n.parent != null)
-//		{
-//			n.opposite_parent = n.parent.pacman_move.opposite().ordinal();
-//		}
-//		if(n.parent == null)
-//		{
-//			n.opposite_parent = n.pacman_move.opposite().ordinal();
-//		}
+		if(n.parent != null)
+		{
+			n.opposite_parent = n.parent.pacman_move.opposite().ordinal();
+		}
+		if(n.parent == null)
+		{
+			n.opposite_parent = n.pacman_move.opposite().ordinal();
+		}
 		
 		for (int i=0;i<n.maxChild;i++)
 		{
@@ -625,6 +681,108 @@ public class UCT {
 		child.SetPathCost(child_depth);
 		child.target_junction = target;
 		return child;
+		
+	}
+	
+	public int PacmanPlayoutPath(Game st, int... path)
+	{
+		boolean just_ate = false;
+		
+		if(!reverse)
+		{
+			if(!helper.IsPathSafe(st, path))
+			{
+				reverse = true;
+				return past_selection;
+			}
+			
+			int go = 0;
+			int min_dist = Integer.MAX_VALUE;
+			for(GHOST ghost : GHOST.values())
+			{
+				if(st.wasGhostEaten(ghost))
+				{
+					just_ate = true;
+				}
+				
+				if(st.isGhostEdible(ghost) && st.getGhostLairTime(ghost)==0)
+				{
+					int dist = st.getShortestPathDistance(st.getPacmanCurrentNodeIndex(),st.getGhostCurrentNodeIndex(ghost));
+					if(dist < min_dist)
+					{
+						go = st.getGhostCurrentNodeIndex(ghost);
+						min_dist = dist;
+					}
+				}
+			}
+			
+			if(st.wasPowerPillEaten() || just_ate)
+			{
+				return go;
+			}
+			
+			//reverse = true;
+			
+		}
+		
+		return -1;
+	}
+	
+	
+	//Return junction to move to
+	public int PacmanPlayoutJunction(Game st)
+	{
+		//First we set the possible safe moves
+		//i.e. • Has no non-edible ghost on it moving in Pac-Man’s direction.
+//		• Next junction is safe, i.e. in any case Pac-Man will reach
+//		the next junction before a non-edible ghost.
+		MOVE[] possibleMoves=st.getPossibleMoves(st.getPacmanCurrentNodeIndex());
+		ArrayList<Integer> safe_moves = new ArrayList<Integer>();
+		HashMap<Integer, Integer> move_junc = new HashMap<Integer,Integer>();
+		int selected_move = -1;
+		int path_pills = 0;
+		int movements = 0;
+		
+		moves:
+		for(MOVE move : possibleMoves)
+		{
+			int junc = helper.NextJunctionORIntersectionTowardMovement(st.getPacmanCurrentNodeIndex(), move);
+			if(junc == -1)
+				continue moves;
+			
+			int[] path = st.getShortestPath(st.getPacmanCurrentNodeIndex(), junc);
+			move_junc.put(move.ordinal(), junc);
+			movements++;
+			
+			if(helper.IsPathSafe(st, path) && !helper.WillGhostsArriveFirst(st, junc))
+			{
+				safe_moves.add(junc);
+				
+				int pi = helper.PillsInPath(st, path);
+				
+				if(pi >= path_pills)
+				{
+					selected_move = junc;
+					path_pills = pi;
+				}
+			}
+		}
+		
+		if(safe_moves.isEmpty())
+		{
+			int index = random.nextInt(movements);
+			if(move_junc.get(index) != null)
+				return move_junc.get(index);
+			else
+			{
+				return helper.NextJunctionORIntersectionTowardMovement(st.getPacmanCurrentNodeIndex(), possibleMoves[0]);
+			}
+		}
+		
+		if(selected_move != -1)
+			return selected_move;
+		
+		return safe_moves.get(random.nextInt(safe_moves.size()));
 		
 	}
 	
