@@ -70,8 +70,11 @@ public class Executor
 		//exec.runGameTimed(new HumanController(new KeyBoardInput()),new StarterGhosts(),visual);
 		
 		//FOR MONTE CARLO TREE SEARCH
+//		exec.runExperiment(new MCTSPacMan(),new StarterGhosts(),100);
 //		exec.runGameTimed(new MCTSPacMan(),new StarterGhosts(),visual);	
+//		exec.runGameTimed(new MCTSPacMan(),new Legacy(),visual);	
 		exec.runGameTimed(new MCTSPacMan(),new Legacy2TheReckoning(),visual);	
+//		exec.runGameTimed(new MCTSPacMan(),new RandomGhosts(),visual);
 //		exec.runGame(new MCTSPacMan(),new StarterGhosts(),visual, delay);	
 		
 		//FOR REINFORCEMENT LEARNING
@@ -534,6 +537,8 @@ public class Executor
     public double runExperiment(Controller<MOVE> pacManController,Controller<EnumMap<GHOST,MOVE>> ghostController,int trials)
     {
     	double avgScore=0;
+    	double max_score = Double.MIN_VALUE;
+    	double min_score = Double.MAX_VALUE;
     	double pills_ate=0;
     	double cherry_ate=0;
     	
@@ -559,12 +564,24 @@ public class Executor
 			
 			//CHECK THIS FOR BEHAVIOR TREES
 			avgScore+=game.getScore();
-			pills_ate += (game.getNumberOfPills() * game.getCurrentLevel()) - game.getNumberOfActivePills();
-			cherry_ate += (game.getNumberOfPowerPills() * game.getCurrentLevel()) - game.getNumberOfActivePowerPills();
-			//System.out.println(i+"\t"+game.getScore());
+//			pills_ate += (game.getNumberOfPills() * game.getCurrentLevel()) - game.getNumberOfActivePills();
+//			cherry_ate += (game.getNumberOfPowerPills() * game.getCurrentLevel()) - game.getNumberOfActivePowerPills();
+			
+			if(game.getScore() > max_score)
+			{
+				max_score = game.getScore();
+			}
+			
+			if(game.getScore() < min_score)
+			{
+				min_score = game.getScore();
+			}
+			System.out.println(i+"\t"+game.getScore());
 		}
 		
-		//System.out.println(avgScore/trials);
+		System.out.println("AVERAGE SCORE: " + avgScore/trials);
+		System.out.println("MAX SCORE: " + max_score);
+		System.out.println("MIN SCORE: " + min_score);
 		return avgScore/trials;
     }
 	

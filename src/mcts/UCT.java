@@ -1,5 +1,8 @@
 package mcts;
 import static pacman.game.Constants.DELAY;
+import static pacman.game.Constants.EDIBLE_TIME;
+import static pacman.game.Constants.EDIBLE_TIME_REDUCTION;
+import static pacman.game.Constants.LEVEL_RESET_REDUCTION;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -39,10 +42,13 @@ public class UCT {
 	//that after eat it won't be as good.
 	
 	
-	private boolean DEBUG 			= false;
-	private int 	MAX_LEVEL_TIME 	= 300;
-	private int 	MAX_DEPTH		= 55;
-	protected final int MAX_ITERATIONS = 300;
+	private boolean DEBUG 					= false;
+	private int 	MAX_LEVEL_TIME 			= 80;
+	private int 	MAX_DEPTH				= 55;
+	private int		CHILD_VISITED_THRESHOLD = 3;
+	private float	GHOST_SCORE_THRESHOLD	= 0.5f;
+	protected final int MAX_ITERATIONS 		= 300;
+	
 	
 	/*
 	 * Maze used to control the game
@@ -56,7 +62,7 @@ public class UCT {
 	/*
 	 * rootNode is the starting point of the present state
 	 */
-	MCTSNode rootNode;
+	public MCTSNode rootNode;
 	
 	/*
 	 * currentNode refers to the node we work at every step
@@ -82,12 +88,13 @@ public class UCT {
 	protected int previous_pills = 0;
 	protected int previous_pp = 0;
 	protected int previous_ghost_eaten = 0;
-	protected int ghost_eaten = 0;
+	protected float ghost_eaten = 0.0f;
 	protected int starting_time = 0;
-	protected int ghost_time_multiplier = 1;
+	protected float ghost_time_multiplier = 1.0f;
 	protected long timeDue;
 	protected long time_left;
 	protected boolean died = false;
+	protected boolean powerpill_eaten  = false;
 	protected float ghost_divisor;
 	protected float pills_eaten;
 	protected int closest_ghost_dist;
@@ -159,6 +166,8 @@ public class UCT {
             rootNode = new MCTSNode(game.copy(), action_range, action);
             rootNode.maxChild = CalculateChildrenAndActions(rootNode);
 
+//            System.out.println("ROOT NODE MAX CHILDREN: " + rootNode.maxChild);
+            
             this.timeDue = timeDue;
             this.time_left = timeDue - System.currentTimeMillis();
 //            System.out.println("TIME LEFT AT BEGGINING: " + this.time_left);
@@ -229,10 +238,10 @@ public class UCT {
 	//and the state we store in them is the state returned from this function.
 	private Game ExecutePathToTarget(int junction_node, Game st)
 	{
-		//TODO: CHECK THIS CODE! PROBLEMS IN THE PATH OR MAYBE DEFAUL POLICY
+		//TODO: CHECK THIS CODE! PROBLEMS IN THE PATH OR MAYBE DEFAULT POLICY
 		Game returning_state = st.copy();
 		int[] path = returning_state.getShortestPath(st.getPacmanCurrentNodeIndex(), junction_node);
-		System.out.println("WE START THE PLAY");
+//		System.out.println("WE START THE PLAY");
 		child_depth = path.length;
 		target = junction_node;
 		current_pacman_path = path;
@@ -242,16 +251,21 @@ public class UCT {
 			
 			if(returning_state.wasPacManEaten())
 			{
-				System.out.println("PACMAN DEAD in node: " + pacman_position);
-				System.out.println("OLD PACMAN POS: " + st.getPacmanCurrentNodeIndex());
+//				System.out.println("PACMAN DEAD in node: " + pacman_position);
+//				System.out.println("OLD PACMAN POS: " + st.getPacmanCurrentNodeIndex());
 //				this.juncs.remove(this.juncs.size() - 1);
 //				this.juncs.add(junction_node);
 				return st;
 			}
 			
+			if(returning_state.wasPowerPillEaten())
+			{
+				return returning_state;
+			}
+			
 			for(GHOST ghost : GHOST.values())
 			{
-				if(returning_state.wasPowerPillEaten() || returning_state.wasGhostEaten(ghost))
+				if(returning_state.wasGhostEaten(ghost))
 				{
 					return returning_state;
 				}
@@ -330,10 +344,11 @@ public class UCT {
 		previous_pills = root_state.getNumberOfActivePills();
 		previous_pp = st.getNumberOfActivePowerPills();
 		previous_ghost_eaten = st.getNumGhostsEaten();
-		ghost_eaten = 0;
+		ghost_eaten = 0.0f;
 		starting_time = root_state.getCurrentLevelTime();
-		ghost_time_multiplier = 1;
+		ghost_time_multiplier = 1.0f;
 		pills_eaten = 0.0f;
+		powerpill_eaten = false;
 		HashMap<GHOST, Integer> edible_table = new HashMap<GHOST, Integer>();
 		
 		int gen = 0;
@@ -343,6 +358,7 @@ public class UCT {
 		current_selection = 0;
 		boolean first_time = true;
 		
+
 		while(!TerminalState(st) && !Terminate(0))
 		{
 //			randomPacman.update(st,this.time_left);
@@ -354,7 +370,7 @@ public class UCT {
 				if(st.wasGhostEaten(ghostType))
 				{
 					ghost_time_multiplier += previous_state.getGhostEdibleTime(ghostType);
-					ghost_eaten++;
+					ghost_eaten += 1.0f;
 //					ghost_time_multiplier += edible_table.get(ghostType);
 //					previous_ghost_eaten++;
 				}
@@ -371,6 +387,7 @@ public class UCT {
 			}
 			else
 			{
+				//AT JUNCTION & INTERS
 				if(helper.IsJunction(st.getPacmanCurrentNodeIndex()) ||
 						helper.IsIntersection(st.getPacmanCurrentNodeIndex()))
 				{
@@ -379,7 +396,7 @@ public class UCT {
 					current_pacman_path = st.getShortestPath(past_selection, current_selection);
 					reverse = false;
 				}
-				else
+				else //IN THE PATH
 				{
 					current_pacman_path = game.getShortestPath(game.getPacmanCurrentNodeIndex(), current_selection);
 					int index = PacmanPlayoutPath(st, current_pacman_path);
@@ -400,6 +417,7 @@ public class UCT {
 			st.advanceGame(current_pacman_action,GhostPlayout(st));	
 			
 			if(st.wasPillEaten()) pills_eaten+=1.0f;
+			if(st.wasPowerPillEaten()) powerpill_eaten = true;
 			
 //			for(GHOST ghostType : GHOST.values())
 //			{
@@ -439,7 +457,7 @@ public class UCT {
 			}
 		}
 		
-		System.out.println("HOW LONG: " + gen);
+//		System.out.println("HOW LONG: " + gen);
 		died = st.wasPacManEaten();
 		return GetReward(st);
 	}
@@ -452,38 +470,70 @@ public class UCT {
 //		previous_ghost_eaten = st.getNumGhostsEaten();
 //		System.out.println("previous_ghost_eaten: " + previous_ghost_eaten);
 		
-		if(!died)
+		if(died)
 		{
-			reward = 1.0f;
+			return 0.0f;
 		}
 		
-		if (pills_eaten > 0 && previous_pills > 0) {
+		if (previous_pills > 0) {
 			//
 			pill_reward = pills_eaten / (float)previous_pills;
 		}
-			
+		
 		if(ghost_eaten > 0)
 		{
+//			System.out.println("WTF IS THIS VALUE AT THE END ?: " + EDIBLE_TIME*(Math.pow(EDIBLE_TIME_REDUCTION,helper.maze_index%LEVEL_RESET_REDUCTION)));
+//			System.out.println("GHOST MULTIPLIER BEFORE NORMALIZATION: " + ghost_time_multiplier + ", GHOST EATEN BEFORE NORM: " + ghost_eaten);
+			ghost_eaten /= 4.0f;
+			ghost_time_multiplier /= (EDIBLE_TIME*(Math.pow(EDIBLE_TIME_REDUCTION,helper.maze_index%LEVEL_RESET_REDUCTION)) * 4.0f);
+//			System.out.println("GHOST MULTIPLIER AFTER NORMALIZATION: " + ghost_time_multiplier + ", GHOST EATEN AFTER NORM: " + ghost_eaten);
+			ghost_reward = (ghost_eaten * ghost_time_multiplier);
+		}
+		System.out.println("GHOST SCORE: " + ghost_reward);
+//		if (previous_pp > st.getNumberOfActivePowerPills()) 
+		if(powerpill_eaten)
+		{
 			
-//			ghost_reward = ((float)(previous_ghost_eaten) / 4.0f)* ghost_time_multiplier;
-			ghost_reward = (ghost_eaten * ghost_time_multiplier);// - closest_ghost_dist;
-//			ghost_reward += previous_ghost_eaten * 100.0f;
-			System.out.println("GHOST REWARD: " + ghost_reward);
-			if (ghost_eaten > 1) {
+			if(ghost_eaten >= GHOST_SCORE_THRESHOLD)
+			{
 				pill_reward += ghost_reward;
+				System.out.println("THE REWARD IS TASTY");
 			}
-			else if(previous_pp > st.getNumberOfActivePowerPills())
+			else
 			{
 				pill_reward = 0.0f;
 				ghost_reward = 0.0f;
-//				ghost_reward = 0.0f;
+				System.out.println("THIS IS HAPPENING BABY");
 			}
+		 	
+//		 	System.out.println("GHOST EATEN: " + ghost_eaten + ", PREVIOUS PP: " + previous_pp + ", PILLS EATEN: " + pills_eaten);
+//		 	System.out.println("GHOST REWARD: " + ghost_reward + ", PILL REWRD: " + pill_reward);
 		}
+			
+//		if(ghost_eaten > 0)
+//		{
+//			
+////			ghost_reward = ((float)(previous_ghost_eaten) / 4.0f)* ghost_time_multiplier;
+//			ghost_reward = (ghost_eaten * ghost_time_multiplier);// - closest_ghost_dist;
+////			ghost_reward += previous_ghost_eaten * 100.0f;
+////			System.out.println("GHOST REWARD: " + ghost_reward);
+//			if (ghost_eaten > 1) {
+//				pill_reward += ghost_reward;
+//			}
+//			else if(previous_pp > st.getNumberOfActivePowerPills())
+//			{
+//				pill_reward = 0.0f;
+//				ghost_reward = 0.0f;
+////				ghost_reward = 0.0f;
+//			}
+//		}
 //		 else if (previous_pp > st.getNumberOfActivePowerPills()) {
 //			 	pill_reward = 0.0f;
 //			}
 		
 		reward += pill_reward + ghost_reward;
+//		System.out.println("FINAL REWARD: " + reward);
+//		System.out.println();
 		
 ////		 = (float)(previous_ghost_eaten)/ 4.0f;
 //		
@@ -577,7 +627,7 @@ public class UCT {
 		{
 			n.opposite_parent = n.pacman_move.opposite().ordinal();
 		}
-		
+//		
 		for (int i=0;i<n.maxChild;i++)
 		{
 
@@ -617,9 +667,45 @@ public class UCT {
 			System.out.println("HOW CAN I GO FOR CHILDS IF EMPTY!!!");
 		}
 		
+		if(nt.times_visited > CHILD_VISITED_THRESHOLD)
+		{
+			for(MCTSNode n : nt.children)
+			{
+				float uct = UCTvalue(n, nt, c);
+	//			float uct = n.reward;
+				if(uct > best_one)
+				{
+					bestChild = n;
+					best_one = uct;
+				}
+			}
+		}
+		else
+		{
+			bestChild = nt.GetRandomChild(random);
+		}
+		
+		bestChild.parent = currentNode;
+		currentNode = bestChild;
+		return bestChild;
+	}
+	
+	private MCTSNode FinalBestChild(float c) {
+		MCTSNode nt = currentNode;
+		MCTSNode bestChild = null;
+
+		float best_one = -10000000.0f;
+		
+		if(nt.children.isEmpty() && nt.equals(rootNode))
+		{
+			System.out.println("HOW CAN I GO FOR CHILDS IF EMPTY!!!");
+		}
+		int counter = 0;
 		for(MCTSNode n : nt.children)
 		{
 			float uct = UCTvalue(n, nt, c);
+			System.out.println("CHILD NUMBER " + counter++ + " UCT VALUE: " + uct);
+//			float uct = n.reward;
 			if(uct > best_one)
 			{
 				bestChild = n;
@@ -640,12 +726,12 @@ public class UCT {
 	 */
 	private float UCTvalue(MCTSNode n, MCTSNode parent, float c) 
 	{
-		float value = n.reward / (float)n.times_visited;
+		float value = n.reward;
 		if(c > 0.0f)
 		{
 			if(parent.times_visited != 0 && n.times_visited != 0)
 			{
-				value += Math.sqrt((2.0f * Math.log((float)parent.times_visited)) / (float)n.times_visited);
+				value += c * (Math.sqrt((2.0f * Math.log((float)parent.times_visited)) / (float)n.times_visited));
 			}
 			else
 			{
@@ -679,18 +765,20 @@ public class UCT {
 		child.parent = currentNode;
 		child.maxChild = CalculateChildrenAndActions(child);
 		child.SetPathCost(child_depth);
+		child.SetPath(current_pacman_path);
 		child.target_junction = target;
 		return child;
 		
 	}
 	
+	//TODO: CHECK THE VALUES AFTER ISPATHSAFE
 	public int PacmanPlayoutPath(Game st, int... path)
 	{
 		boolean just_ate = false;
 		
 		if(!reverse)
 		{
-			if(!helper.IsPathSafe(st, path))
+			if(!helper.IsPathSafe(st, path) || helper.WillGhostsArriveFirst(st, current_selection))
 			{
 				reverse = true;
 				return past_selection;
@@ -736,6 +824,7 @@ public class UCT {
 		//i.e. • Has no non-edible ghost on it moving in Pac-Man’s direction.
 //		• Next junction is safe, i.e. in any case Pac-Man will reach
 //		the next junction before a non-edible ghost.
+		//CHECK THIS FOR NOT CONSIDER REVERSE
 		MOVE[] possibleMoves=st.getPossibleMoves(st.getPacmanCurrentNodeIndex());
 		ArrayList<Integer> safe_moves = new ArrayList<Integer>();
 		HashMap<Integer, Integer> move_junc = new HashMap<Integer,Integer>();
@@ -768,6 +857,9 @@ public class UCT {
 			}
 		}
 		
+		if(selected_move != -1)
+			return selected_move;
+		
 		if(safe_moves.isEmpty())
 		{
 			int index = random.nextInt(movements);
@@ -778,9 +870,6 @@ public class UCT {
 				return helper.NextJunctionORIntersectionTowardMovement(st.getPacmanCurrentNodeIndex(), possibleMoves[0]);
 			}
 		}
-		
-		if(selected_move != -1)
-			return selected_move;
 		
 		return safe_moves.get(random.nextInt(safe_moves.size()));
 		

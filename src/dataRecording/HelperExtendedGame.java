@@ -9,7 +9,7 @@ import pacman.game.Constants.MOVE;
 public class HelperExtendedGame 
 {
 	int[] intersections = null;
-	int maze_index = -1;
+	public int maze_index = -1;
 	Game current_state;
 	
 	public HelperExtendedGame()
@@ -29,38 +29,36 @@ public class HelperExtendedGame
 	
 	public void RecalculateIntersections()
 	{
-		if(this.intersections == null || this.intersections.length == 0)
+	
+		int[] intersections = null;
+		ArrayList<Integer> inters = new ArrayList<Integer>();
+		
+		int max_nodes = current_state.getNumberOfNodes();
+		
+		for(int i = 0; i < max_nodes; i++)
 		{
-			int[] intersections = null;
-			ArrayList<Integer> inters = new ArrayList<Integer>();
-			
-			int max_nodes = current_state.getNumberOfNodes();
-			
-			for(int i = 0; i < max_nodes; i++)
+			int neighbor_n = current_state.getNeighbour(i, MOVE.UP);
+			int neighbor_e = current_state.getNeighbour(i, MOVE.RIGHT);
+			int neighbor_s = current_state.getNeighbour(i, MOVE.DOWN);
+			int neighbor_w = current_state.getNeighbour(i, MOVE.LEFT);
+		
+			//We have a possible intersection
+			if(neighbor_n == -1 && (neighbor_e == -1 || neighbor_w == -1)) //wall
 			{
-				int neighbor_n = current_state.getNeighbour(i, MOVE.UP);
-				int neighbor_e = current_state.getNeighbour(i, MOVE.RIGHT);
-				int neighbor_s = current_state.getNeighbour(i, MOVE.DOWN);
-				int neighbor_w = current_state.getNeighbour(i, MOVE.LEFT);
-			
-				//We have a possible intersection
-				if(neighbor_n == -1 && (neighbor_e == -1 || neighbor_w == -1)) //wall
-				{
-					inters.add(i);
-				}
-				else if(neighbor_s == -1 && (neighbor_e == -1 || neighbor_w == -1))
-				{
-					inters.add(i);
-				}
+				inters.add(i);
 			}
-			
-			intersections = new int[inters.size()];
-			
-			for(int i=0;i<intersections.length;i++)
-				intersections[i]=inters.get(i);
-			
-			this.intersections = intersections;
+			else if(neighbor_s == -1 && (neighbor_e == -1 || neighbor_w == -1))
+			{
+				inters.add(i);
+			}
 		}
+		
+		intersections = new int[inters.size()];
+		
+		for(int i=0;i<intersections.length;i++)
+			intersections[i]=inters.get(i);
+		
+		this.intersections = intersections;
 		
 	}
 	

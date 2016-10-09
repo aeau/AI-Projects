@@ -2,6 +2,7 @@ package mcts;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import pacman.game.Constants.MOVE;
 import pacman.game.Game;
@@ -29,11 +30,19 @@ public class MCTSNode{
 	public int path_cost = 0;
 	public int target_junction = 0;
 	
+	//FOR DEBUGGING PURPOSES
+	public int[] safe_path = null;
+	
 	MCTSNode(Game state, int range, int action){
 		this.state = state;
 		maxChild = range;
 		move = action;
 		pacman_move = MOVE.values()[move];
+	}
+	
+	public void SetPath(int... path)
+	{
+		safe_path = path;
 	}
 	
 	public void SetPathCost(int value)
@@ -44,5 +53,10 @@ public class MCTSNode{
 	public boolean IsFullyExpanded()
 	{
 		return untried_actions.isEmpty();
+	}
+	
+	public MCTSNode GetRandomChild(Random rnd)
+	{
+		return children.get(rnd.nextInt(children.size()));
 	}
 }

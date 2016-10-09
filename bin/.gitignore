@@ -1,6 +1,3 @@
-/behaviortree/
-/dataRecording/
 /mcts/
-/neuralnetwork/
 /pacman/
-/reinforcementlearning/
+/dataRecording/
