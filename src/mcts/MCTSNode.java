@@ -29,6 +29,7 @@ public class MCTSNode{
 	public MOVE pacman_move;
 	public int path_cost = 0;
 	public int target_junction = 0;
+	public MCTSReward my_reward;
 	
 	//FOR DEBUGGING PURPOSES
 	public int[] safe_path = null;

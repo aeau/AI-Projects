@@ -131,7 +131,7 @@ public class MCTSPacMan extends Controller<MOVE>
 				}
 				Color col = new Color(a,0.5f,0.8f);
 				if(c.safe_path != null && mcts.helper.IsPathSafe(game, c.safe_path) )
-					GameView.addPoints(game,Color.GREEN, c.safe_path);
+					GameView.addPoints(game,col, c.safe_path);
 			}
 		}
 //		GameView.addPoints(game,Color.CYAN, mcts.helper.GetIntersections());

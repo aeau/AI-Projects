@@ -47,6 +47,7 @@ public class UCT {
 	private int 	MAX_DEPTH				= 55;
 	private int		CHILD_VISITED_THRESHOLD = 3;
 	private float	GHOST_SCORE_THRESHOLD	= 0.5f;
+	private int		TIME_THRESHOLD			= 5;
 	protected final int MAX_ITERATIONS 		= 300;
 	
 	
@@ -137,8 +138,8 @@ public class UCT {
 		tactic = Tactics.PILL;
 		helper = new HelperExtendedGame();
 		
-//		randomPacman = new RandomPacMan();
-//		randomGhost = new RandomGhosts();
+		randomPacman = new RandomPacMan();
+		randomGhost = new RandomGhosts();
 		
 //		randomPacman.update(game.copy(),System.currentTimeMillis()+DELAY);
 //		randomGhost.update(game.copy(),System.currentTimeMillis()+DELAY);
@@ -345,7 +346,7 @@ public class UCT {
 		previous_pp = st.getNumberOfActivePowerPills();
 		previous_ghost_eaten = st.getNumGhostsEaten();
 		ghost_eaten = 0.0f;
-		starting_time = root_state.getCurrentLevelTime();
+		starting_time = st.getCurrentLevelTime();
 		ghost_time_multiplier = 1.0f;
 		pills_eaten = 0.0f;
 		powerpill_eaten = false;
@@ -460,6 +461,54 @@ public class UCT {
 //		System.out.println("HOW LONG: " + gen);
 		died = st.wasPacManEaten();
 		return GetReward(st);
+	}
+	
+	public MCTSReward GetRewards(Game st)
+	{
+		float survival_reward = 0.0f;
+		float ghost_reward = 0.0f;
+		float pill_reward = 0.0f;
+//		previous_ghost_eaten = st.getNumGhostsEaten();
+//		System.out.println("previous_ghost_eaten: " + previous_ghost_eaten);
+		
+		if(!died)
+		{
+			survival_reward = 1.0f;
+		}
+		
+		if (previous_pills > 0) {
+			//
+			pill_reward = pills_eaten / (float)previous_pills;
+		}
+		
+		if(ghost_eaten > 0)
+		{
+//			System.out.println("WTF IS THIS VALUE AT THE END ?: " + EDIBLE_TIME*(Math.pow(EDIBLE_TIME_REDUCTION,helper.maze_index%LEVEL_RESET_REDUCTION)));
+//			System.out.println("GHOST MULTIPLIER BEFORE NORMALIZATION: " + ghost_time_multiplier + ", GHOST EATEN BEFORE NORM: " + ghost_eaten);
+			ghost_eaten /= 4.0f;
+			ghost_time_multiplier /= (EDIBLE_TIME*(Math.pow(EDIBLE_TIME_REDUCTION,helper.maze_index%LEVEL_RESET_REDUCTION)) * 4.0f);
+//			System.out.println("GHOST MULTIPLIER AFTER NORMALIZATION: " + ghost_time_multiplier + ", GHOST EATEN AFTER NORM: " + ghost_eaten);
+			ghost_reward = (ghost_eaten * ghost_time_multiplier);
+		}
+		System.out.println("GHOST SCORE: " + ghost_reward);
+//		if (previous_pp > st.getNumberOfActivePowerPills()) 
+		if(powerpill_eaten)
+		{
+			
+			if(ghost_eaten >= GHOST_SCORE_THRESHOLD)
+			{
+				pill_reward += ghost_reward;
+				System.out.println("THE REWARD IS TASTY");
+			}
+			else
+			{
+				pill_reward = 0.0f;
+				System.out.println("THIS IS HAPPENING BABY");
+			}
+		 	
+		}
+
+		return new MCTSReward(pill_reward, ghost_reward, survival_reward);
 	}
 	
 	public float GetReward(Game st)
@@ -628,6 +677,7 @@ public class UCT {
 			n.opposite_parent = n.pacman_move.opposite().ordinal();
 		}
 //		
+		
 		for (int i=0;i<n.maxChild;i++)
 		{
 
@@ -1071,7 +1121,7 @@ public class UCT {
 //		{
 //			System.out.println("I WAS CALLED FROM: " + function + "; TIME LEFT: " + this.time_left + "; BEFORE CALCULATING: " + p);
 //		}
-		return (i>MAX_ITERATIONS) || this.time_left < 5;
+		return (i>MAX_ITERATIONS) || this.time_left < TIME_THRESHOLD;
 	}
 	
 	private boolean DepthReached(int extra_value)
