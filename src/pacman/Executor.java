@@ -30,6 +30,8 @@ import pacman.controllers.examples.MCTSPacMan;
 import pacman.controllers.examples.NearestPillPacMan;
 import pacman.controllers.examples.NearestPillPacManVS;
 import pacman.controllers.examples.NeuralNetworkPacMan;
+import pacman.controllers.examples.PlayoutGhosts;
+import pacman.controllers.examples.PlayoutPacman;
 import pacman.controllers.examples.QLearningPacMan;
 import pacman.controllers.examples.QLearningPacMan2;
 import pacman.controllers.examples.RandomGhosts;
@@ -37,6 +39,7 @@ import pacman.controllers.examples.RandomNonRevPacMan;
 import pacman.controllers.examples.RandomPacMan;
 import pacman.controllers.examples.StarterGhosts;
 import pacman.controllers.examples.StarterPacMan;
+import pacman.controllers.examples.StupidGhostDontDoAnything;
 import pacman.game.Game;
 import pacman.game.GameView;
 import pacman.game.Constants.GHOST;
@@ -67,15 +70,22 @@ public class Executor
 		int delay=5;
 		
 		//HUMAN TEST
-		//exec.runGameTimed(new HumanController(new KeyBoardInput()),new StarterGhosts(),visual);
+//		exec.runGameTimed(new HumanController(new KeyBoardInput()),new StarterGhosts(),visual);
 		
 		//FOR MONTE CARLO TREE SEARCH
-//		exec.runExperiment(new MCTSPacMan(),new StarterGhosts(),100);
-		exec.runGameTimed(new MCTSPacMan(),new StarterGhosts(),visual);	
+//		exec.runExperiment(new MCTSPacMan(),new StarterGhosts(),30);
+//		exec.runExperiment(new MCTSPacMan(),new RandomGhosts(),30);
+		exec.runExperiment(new MCTSPacMan(),new Legacy2TheReckoning(),30);
+//		exec.runGameTimed(new MCTSPacMan(),new PlayoutGhosts(),visual);	
 //		exec.runGameTimed(new MCTSPacMan(),new Legacy(),visual);	
-//		exec.runGameTimed(new MCTSPacMan(),new Legacy2TheReckoning(),visual);	
+//		exec.runGameTimed(new MCTSPacMan(),new StupidGhostDontDoAnything(),visual);	
 //		exec.runGameTimed(new MCTSPacMan(),new RandomGhosts(),visual);
-//		exec.runGame(new MCTSPacMan(),new StarterGhosts(),visual, delay);	
+//		exec.runGameTimed(new MCTSPacMan(),new Legacy2TheReckoning(),visual);
+//		exec.runGameTimed(new MCTSPacMan(),new StarterGhosts(),visual);	
+		
+//		exec.runGame(new PlayoutPacman(),new Legacy2TheReckoning(),visual, delay);	
+//		exec.runExperiment(new PlayoutPacman(),new Legacy2TheReckoning(),100);
+//		exec.runGameTimed(new PlayoutPacman(),new PlayoutGhosts(),visual);
 		
 		//FOR REINFORCEMENT LEARNING
 		
@@ -544,9 +554,12 @@ public class Executor
     	
     	Random rnd=new Random(0);
 		Game game;
+
+		
 		
 		for(int i=0;i<trials;i++)
 		{
+			double starting_mil = System.currentTimeMillis();
 			game=new Game(rnd.nextLong());
 			int pacman_lives = 3;
 			//int num_pills
@@ -576,7 +589,11 @@ public class Executor
 			{
 				min_score = game.getScore();
 			}
-			System.out.println(i+"\t"+game.getScore());
+			
+			double ending_time = System.currentTimeMillis() - starting_mil;
+			ending_time /= 1000.0;
+			
+			System.out.println(i+"\t"+game.getScore() + "\t" + game.getCurrentLevel() + "\t elapsed seconds: " + ending_time);
 		}
 		
 		System.out.println("AVERAGE SCORE: " + avgScore/trials);
@@ -703,6 +720,7 @@ public class Executor
 	        
 	        if(visual)
 	        {
+//	        	GameView.addPoints(game, Color.CYAN, game.getJunctionIndices()[2]);
 	        	//if(game.isJunction(game.getPacmanCurrentNodeIndex()))
 	        		//GameView.addPoints(game, Color.CYAN, ClosestKJunctions(game, 4));
 	        	gv.repaint();

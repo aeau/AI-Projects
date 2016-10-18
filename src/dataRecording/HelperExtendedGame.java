@@ -1,14 +1,19 @@
 package dataRecording;
 
+import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import pacman.game.Game;
+import pacman.game.GameView;
+import pacman.game.Constants.DM;
 import pacman.game.Constants.GHOST;
 import pacman.game.Constants.MOVE;
 
 public class HelperExtendedGame 
 {
 	int[] intersections = null;
+	HashMap<MOVE, int[]> correlated_path_to_move = new HashMap<MOVE, int[]>(); 
 	public int maze_index = -1;
 	Game current_state;
 	
@@ -24,6 +29,18 @@ public class HelperExtendedGame
 		{
 			maze_index = current.getMazeIndex();
 			RecalculateIntersections();
+		}
+	}
+	
+	public int[] GetPathFromMove(MOVE move)
+	{
+		if(correlated_path_to_move.containsKey(move))
+		{
+			return correlated_path_to_move.get(move);
+		}
+		else
+		{
+			return null;
 		}
 	}
 	
@@ -217,36 +234,56 @@ public class HelperExtendedGame
 		
 		if(next_movement == -1)
 		{
-			return junction;
+			return -1;
 		}
 		
+		ArrayList<Integer> path = new ArrayList<Integer>();
+		path.add(next_movement);
 		while(!IsJunction(next_movement))
 		{
+			
+			movement = current_state.getPossibleMoves(next_movement, movement)[0];
+			
+//			if(move == MOVE.LEFT)
+//			{
+//				GameView.addPoints(current_state, Color.PINK, next_movement);
+//			}
+			
+			
 			next_movement = current_state.getNeighbour(next_movement, movement);
+			path.add(next_movement);
 			
-			if(IsIntersection(next_movement))
-			{
-				intersection:
-				for(MOVE m : MOVE.values())
-				{
-					if(m == movement || m == movement.opposite())
-					{
-						continue intersection;
-					}
-					else if(current_state.getNeighbour(next_movement, m) != -1)
-					{
-						movement = m;
-						break intersection;
-					}
-				}
-			}
-			
-			if(next_movement == -1)
-			{
-				return junction;
-			}
+//			if(IsIntersection(next_movement))
+//			{
+//				intersection:
+//				for(MOVE m : MOVE.values())
+//				{
+//					if(m == movement || m == movement.opposite())
+//					{
+//						continue intersection;
+//					}
+//					else if(current_state.getNeighbour(next_movement, m) != -1)
+//					{
+//						movement = m;
+//						break intersection;
+//					}
+//				}
+//			}
+//			
+//			if(next_movement == -1)
+//			{
+//				return -1;
+//			}
 			
 		}
+		
+		int[] _path = new int[path.size()];
+		for(int i = 0; i < _path.length; i++)
+		{
+			_path[i] = path.get(i);
+		}
+		
+		correlated_path_to_move.put(move, _path);
 		
 		return next_movement;
 	}
@@ -294,6 +331,48 @@ public class HelperExtendedGame
 		return null;
 	}
 	
+	public boolean IsPathSafePowerPill(Game st, int... path)
+	{
+		int pill;
+		for(int p : path)
+		{
+			for(GHOST ghost : GHOST.values())
+			{
+				if(!st.isGhostEdible(ghost) && st.getGhostCurrentNodeIndex(ghost) == p)
+				{
+					return false;
+				}
+			}
+			
+			pill = st.getPowerPillIndex(p);
+			if(pill != -1)
+			{
+				if(st.isPowerPillStillAvailable(pill))
+				{
+					return true;
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	public boolean GhostInThePathOfGhost(Game st, GHOST my_ghost, int... path )
+	{
+		for(int p : path)
+		{
+			for(GHOST ghost : GHOST.values())
+			{
+				if(ghost != my_ghost && st.getGhostCurrentNodeIndex(ghost) == p)
+				{
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
 	public boolean IsPathSafe(Game st, int... path)
 	{
 		for(int p : path)
@@ -310,19 +389,84 @@ public class HelperExtendedGame
 		return true;
 	}
 	
+	public boolean EdibleGhostInPath(Game st, int... path)
+	{
+		for(int p : path)
+		{
+			for(GHOST ghost : GHOST.values())
+			{
+				if(st.isGhostEdible(ghost) && st.getGhostCurrentNodeIndex(ghost) == p)
+				{
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	public int NearestPill(Game st)
+	{
+		int value = -1;
+		int[] pills=st.getActivePillsIndices();	
+		
+		if(pills.length != 0)
+		{
+			value = st.getClosestNodeIndexFromNodeIndex(st.getPacmanCurrentNodeIndex(),pills,DM.PATH);
+		}
+		
+		return value;
+	}
+	
+	public int NearestPowerPill(Game st)
+	{
+		int value = -1;
+		int[] pills=st.getActivePowerPillsIndices();	
+		
+		if(pills.length != 0)
+		{
+			value = st.getClosestNodeIndexFromNodeIndex(st.getPacmanCurrentNodeIndex(),pills,DM.PATH);
+		}
+		
+		return value;
+	}
+	
+	public int NearestEdibleGhost(Game st, int range)
+	{
+		int value = -1;
+		int min_dist = range;
+		for(GHOST ghost : GHOST.values())
+		{
+			if(st.isGhostEdible(ghost) && st.getGhostLairTime(ghost) == 0)
+			{
+				int dist = st.getShortestPathDistance(st.getPacmanCurrentNodeIndex(),
+						st.getGhostCurrentNodeIndex(ghost));
+				if(dist < min_dist)
+				{
+					min_dist = dist;
+					value = st.getGhostCurrentNodeIndex(ghost);
+				}
+			}	
+		}
+		
+		return value;
+	}
 	
 	//MAYBE CHECK HEADING OF GHOST
-	//CHECK THIS NIG
+	//TODO: DELETE COMMENT & CHECK -- 12/10/2016
 	public boolean WillGhostsArriveFirst(Game st, int target)
 	{
 		int min_dist = st.getShortestPathDistance(st.getPacmanCurrentNodeIndex(), target);
 		
+//		System.out.println("PACMAN DISTANCE TO TARGET: " + min_dist);
 		for(GHOST ghost : GHOST.values())
 		{
+						
 			if(	st.getGhostLairTime(ghost) == 0 &&
 				!st.isGhostEdible(ghost) &&
-				st.getShortestPathDistance(st.getGhostCurrentNodeIndex(ghost), target) <= min_dist)
+				st.getShortestPathDistance(st.getGhostCurrentNodeIndex(ghost), target) <= min_dist + 2)
 			{
+//				System.out.println("GHOST " + ghost + " DISTANCE TO TARGET: " + st.getShortestPathDistance(st.getGhostCurrentNodeIndex(ghost), target));
 				return true;
 			}
 		}

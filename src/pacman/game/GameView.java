@@ -8,6 +8,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -350,10 +352,14 @@ public final class GameView extends JComponent
          */
         public GameFrame(JComponent comp)
         {
+        	GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        	GraphicsDevice[] gd = ge.getScreenDevices();
+        	
             getContentPane().add(BorderLayout.CENTER,comp);
             pack();
             Dimension screen=Toolkit.getDefaultToolkit().getScreenSize();
-            this.setLocation((int)(screen.getWidth()*3/8),(int)(screen.getHeight()*3/8));            
+            //this.setLocation((int)(screen.getWidth()*3/8),(int)(screen.getHeight()*3/8));     
+            this.setLocation(gd[1].getDefaultConfiguration().getBounds().x + gd[1].getDefaultConfiguration().getBounds().width /2,  (int)(screen.getHeight()*3/8));
             this.setVisible(true);
             this.setResizable(false);
             setDefaultCloseOperation(EXIT_ON_CLOSE);
