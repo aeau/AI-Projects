@@ -75,13 +75,14 @@ public class Executor
 		//FOR MONTE CARLO TREE SEARCH
 //		exec.runExperiment(new MCTSPacMan(),new StarterGhosts(),30);
 //		exec.runExperiment(new MCTSPacMan(),new RandomGhosts(),30);
-		exec.runExperiment(new MCTSPacMan(),new Legacy2TheReckoning(),30);
+//		exec.runExperiment(new MCTSPacMan(),new Legacy2TheReckoning(),100);
+//		exec.runExperiment(new MCTSPacMan(),new StupidGhostDontDoAnything(),30);
 //		exec.runGameTimed(new MCTSPacMan(),new PlayoutGhosts(),visual);	
 //		exec.runGameTimed(new MCTSPacMan(),new Legacy(),visual);	
 //		exec.runGameTimed(new MCTSPacMan(),new StupidGhostDontDoAnything(),visual);	
 //		exec.runGameTimed(new MCTSPacMan(),new RandomGhosts(),visual);
 //		exec.runGameTimed(new MCTSPacMan(),new Legacy2TheReckoning(),visual);
-//		exec.runGameTimed(new MCTSPacMan(),new StarterGhosts(),visual);	
+		exec.runGameTimed(new MCTSPacMan(),new StarterGhosts(),visual);	
 		
 //		exec.runGame(new PlayoutPacman(),new Legacy2TheReckoning(),visual, delay);	
 //		exec.runExperiment(new PlayoutPacman(),new Legacy2TheReckoning(),100);

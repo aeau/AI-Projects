@@ -80,22 +80,22 @@ public class MCTSNode{
 		my_reward.CalculateMaxFromChildren(children);
 	}
 	
-	//PROBLEM WITH AVG AND MAX VALUES
+	//TODO: PROBLEM WITH AVG AND MAX VALUES
 	public float GetMaxValue(Tactics tactic)
 	{
 //		UpdateReward();
 		switch(tactic)
 		{
 		case PILL:
-			return my_reward.MAX_pill_reward * my_reward.MAX_survival_reward;
+			return my_reward.MAX_pill_reward;
 //			break;
 		case GHOST:
-			return my_reward.MAX_ghost_reward * my_reward.MAX_survival_reward;
+			return my_reward.MAX_ghost_reward;
 //			break;
 		case SURVIVE:
 			return my_reward.MAX_survival_reward;
 		case ENDGAME:
-			return my_reward.MAX_pill_reward;
+			return my_reward.MAX_pill_reward; //Take away this survival part
 //			break;
 		}
 		

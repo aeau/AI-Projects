@@ -61,6 +61,7 @@ public class MCTSReward
 		else
 		{
 			CalculateAvgFromChildren(children, times_visited);
+			CalculateMaxFromChildren(children);
 		}
 	}
 	
@@ -98,11 +99,11 @@ public class MCTSReward
 		{
 			for(MCTSNode child : children)
 			{
-				if(child.my_reward.MAX_pill_reward >= pr)
-					pr = child.my_reward.MAX_pill_reward;
+				if(child.my_reward.MAX_pill_reward * child.my_reward.MAX_survival_reward >= pr)
+					pr = child.my_reward.MAX_pill_reward * child.my_reward.MAX_survival_reward;
 				
-				if(child.my_reward.MAX_ghost_reward >= gr)
-					gr = child.my_reward.MAX_ghost_reward;
+				if(child.my_reward.MAX_ghost_reward * child.my_reward.MAX_survival_reward>= gr)
+					gr = child.my_reward.MAX_ghost_reward* child.my_reward.MAX_survival_reward;
 				
 				if(child.my_reward.MAX_survival_reward >= sr)
 					sr = child.my_reward.MAX_survival_reward;
@@ -112,6 +113,7 @@ public class MCTSReward
 			MAX_ghost_reward = gr;
 			MAX_survival_reward = sr;
 			
+			// I THINK THIS IS GOOD ALREADY
 		}
 		else
 		{

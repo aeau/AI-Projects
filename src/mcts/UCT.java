@@ -36,7 +36,7 @@ import pacman.game.Constants.MOVE;
  * 
  * @author D.Vitonis
  * @modified A. Hartzen
- *
+ * @modified A. Alvarez
  */
 public class UCT {
 	
@@ -172,13 +172,16 @@ public class UCT {
 			
 			if(rootNode != null)
 			{
-				IterateAllScores(rootNode);
+//				IterateAllScores(rootNode);
 				SelectTactic(game.copy());
 			}
 			
+//			System.out.println("THE CURRENT TACTIC IS: " + tactic);
+//			System.out.println();
 			
             rootNode = new MCTSNode(game.copy(), action_range, action, game.getPacmanCurrentNodeIndex(), "ROOT NODE", allMoves[action]);
             rootNode.maxChild = CalculateChildrenAndActions(rootNode);
+//            rootNode.maxChild = CalculateChildrenAndActionsWithReverse(rootNode); //REVERT THIS
             this.timeDue = timeDue;
             this.time_left = timeDue - System.currentTimeMillis();
 //            System.out.println("TIME LEFT AT BEGGINING: " + this.time_left);
@@ -197,9 +200,10 @@ public class UCT {
             	FillList();
             	simulator.init(selected_nodes, rootNode, helper, this.timeDue, end_target, tactic);
             	Backpropagate(simulator.Simulate());
+//            	SelectTactic(game.copy());
 //            	Backpropagate(DefaultPolicy());
             	
-            	IterateAllScores(rootNode);
+//            	IterateAllScores(rootNode); //--> IDK MAN; THIS IS SO CONFUSING THE MAX THING
             }
 //            System.out.println("HOW MANY ITERATIONS? : " + iterations);
 //            System.out.println("MAX SURVIVAL RATE: " + rootNode.GetMaxValue(Tactics.SURVIVE));
@@ -213,7 +217,7 @@ public class UCT {
 //            System.out.println("TIME LEFT BEFORE ACTION SELECTED: " + time_left);
             
             
-//            IterateAllScores(rootNode);
+            IterateAllScores(rootNode);
 //            SelectTactic(rootNode.state);
             
             currentNode = BestChild(0.0f);
@@ -229,7 +233,65 @@ public class UCT {
             current_pacman_path = helper.GetPathFromMove(bestAction); //game.getShortestPath(previous_target, target);
 //            time_left = timeDue - System.currentTimeMillis();
 //            System.out.println("TIME LEFT AFTER ACTION SELECTED: " + time_left);
+            
+//            DebugConsideredDestinations(rootNode);
             return bestAction;
+	}
+	
+	public void DebugConsideredDestinations(MCTSNode node)
+	{
+		int counter = 0;
+//		MCTSNode node = rootNode;
+		System.out.println();
+		System.out.println(node.name + " SURVIVE FULL SCORE: " + node.my_reward.survival_reward);
+		System.out.println(node.name + " SURVIVE NORM SCORE: " + node.my_reward.norm_survival_reward);
+		System.out.println(node.name + " SURVIVE MAX SCORE: " + node.my_reward.MAX_survival_reward);
+		System.out.println(node.name + " VISIT COUNT: " + node.times_visited);
+		
+		for(MCTSNode child : node.children)
+		{
+			System.out.println();
+			System.out.println("CHILD " + counter + " SURVIVE FULL SCORE: " + child.my_reward.survival_reward);
+			System.out.println("CHILD " + counter + " SURVIVE NORM SCORE: " + child.my_reward.norm_survival_reward);
+			System.out.println("CHILD " + counter + " SURVIVE MAX SCORE: " + child.my_reward.MAX_survival_reward);
+			System.out.println("CHILD " + counter + " VISIT COUNT: " + child.times_visited);
+			
+//			float alpha = child.GetMaxValue(tactic);
+//			float inversed_alpha = 1 - alpha;
+//			Color r = Color.RED;
+//			Color g = Color.GREEN;
+//			
+//			
+//			float r_c = (r.getRed() * inversed_alpha + g.getRed() * alpha);
+//			float g_c = (r.getGreen() * inversed_alpha + g.getGreen() * alpha);
+//			float b_c = (r.getBlue() * inversed_alpha + g.getBlue() * alpha);
+//			
+//			Color result_color = new Color(r_c/255.0f, g_c/255.0f, b_c/255.0f);
+////			Color col = new Color(node.GetMaxValue(tactic),1.0f,1.0f);
+//			GameView.addPoints(game,result_color, child.destination);
+			DebugConsideredDestinations(child);
+			counter++;
+		}
+//		while(node.children.size() != counter)
+//		{
+////			DebugConsideredDestinations(node.children.get(counter));
+//			counter++;
+//		}
+//		
+//		float alpha = node.GetMaxValue(tactic);
+//		float inversed_alpha = 1 - alpha;
+//		Color r = Color.RED;
+//		Color g = Color.GREEN;
+//		
+//		
+//		float r_c = (r.getRed() * inversed_alpha + g.getRed() * alpha);
+//		float g_c = (r.getGreen() * inversed_alpha + g.getGreen() * alpha);
+//		float b_c = (r.getBlue() * inversed_alpha + g.getBlue() * alpha);
+//		
+//		Color result_color = new Color(r_c/255.0f, g_c/255.0f, b_c/255.0f);
+////		Color col = new Color(node.GetMaxValue(tactic),1.0f,1.0f);
+//		GameView.addPoints(game,result_color, node.destination);
+//		
 	}
 	
 	private void FillList()

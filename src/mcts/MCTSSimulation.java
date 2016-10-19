@@ -389,14 +389,14 @@ public class MCTSSimulation {
 			ghost_eaten /= 4.0f;
 			ghost_multiplier /= (EDIBLE_TIME*(Math.pow(EDIBLE_TIME_REDUCTION,helper.maze_index%LEVEL_RESET_REDUCTION)) * 4.0f);
 //				System.out.println("GHOST MULTIPLIER AFTER NORMALIZATION: " + ghost_time_multiplier + ", GHOST EATEN AFTER NORM: " + ghost_eaten);
-			ghost_score = (ghost_eaten * ghost_multiplier);
+			ghost_score = ghost_multiplier; //MAYBE WE NEED THE GHOST EATEN
 		}
 //			System.out.println("GHOST SCORE: " + ghost_reward);
 //			if (previous_pp > st.getNumberOfActivePowerPills()) 
 		if(ate_pp && current_tactic != Tactics.ENDGAME)
 		{
 			
-			if(ghost_eaten >= MCTSConstants.GHOST_SCORE_THRESHOLD)
+			if(ghost_multiplier >= MCTSConstants.GHOST_SCORE_THRESHOLD) //MAYBE GHOST EATEN INSTEAD OF MULTIPLER //TODO:
 			{
 				pill_score += ghost_score;
 //				System.out.println("THE REWARD IS TASTY");
@@ -426,7 +426,7 @@ public class MCTSSimulation {
 		
 		if(!reverse)
 		{
-			if(!helper.IsPathSafePowerPill(st, path))
+			if(!helper.IsPathSafePowerPill(st, path) && helper.WillGhostsArriveFirst(st, path[path.length - 1]))
 			{
 //					System.out.println("I'M SCARED PLEAE DONT KILL ME GHOST");
 				reverse = true;

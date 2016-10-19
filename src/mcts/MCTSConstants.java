@@ -4,7 +4,7 @@ public class MCTSConstants
 {
 	//ALL CONSTANTS USED IN MCTS
 	public static final boolean DEBUG 					= false;
-	public static final int 	MAX_ITERATIONS 			= 300;
+	public static final int 	MAX_ITERATIONS 			= 2000;
 	public static final int 	MAX_LEVEL_TIME 			= 80;
 	public static final int 	MAX_DEPTH				= 55;
 	public static final int		CHILD_VISITED_THRESHOLD = -1; //--> check this one

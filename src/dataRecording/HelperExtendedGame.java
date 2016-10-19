@@ -464,7 +464,7 @@ public class HelperExtendedGame
 						
 			if(	st.getGhostLairTime(ghost) == 0 &&
 				!st.isGhostEdible(ghost) &&
-				st.getShortestPathDistance(st.getGhostCurrentNodeIndex(ghost), target) <= min_dist + 2)
+				st.getShortestPathDistance(st.getGhostCurrentNodeIndex(ghost), target) <= min_dist + 3)
 			{
 //				System.out.println("GHOST " + ghost + " DISTANCE TO TARGET: " + st.getShortestPathDistance(st.getGhostCurrentNodeIndex(ghost), target));
 				return true;

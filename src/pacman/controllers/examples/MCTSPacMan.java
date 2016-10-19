@@ -59,17 +59,17 @@ public class MCTSPacMan extends Controller<MOVE>
 //			GameView.addPoints(game, Color.ORANGE, mcts.target);
 //		}
 //		
-//		try {
-////			System.out.println(mcts.tactic);
-//			previous_pos = pacman_pos;
-//			move = mcts.runUCT(game.getPacmanLastMoveMade().ordinal(), timeDue);
-//			next_dest = mcts.target;
-//			reverse = false;
-//			return move;
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		try {
+//			System.out.println(mcts.tactic);
+			previous_pos = pacman_pos;
+			move = mcts.runUCT(game.getPacmanLastMoveMade().ordinal(), timeDue);
+			next_dest = mcts.target;
+			reverse = false;
+			return move;
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 //		System.out.println("I COULD PASS TO HERE WTF!!!!");
 		if(game.wasPacManEaten() || game.getCurrentLevelTime() == 0)
@@ -108,14 +108,17 @@ public class MCTSPacMan extends Controller<MOVE>
 		{
 //			mcts.current_pacman_path = game.getShortestPath(game.getPacmanCurrentNodeIndex(), mcts.target);
 			
-			int[] updated_path = game.getShortestPath(pacman_pos, next_dest);
+			int[] updated_path = game.getShortestPath(pacman_pos, next_dest); //--> error of 1297 index shit
+			//Maybe is when changing level the index already changes
+			
 //			System.out.println("NEXT DESTINATION = " + next_dest);
 //			System.out.println("FUCKING PACMAN POSITION = " + pacman_pos);
 			GameView.addPoints(game, Color.GREEN, updated_path);
 			//CHECK THIS SHIT
 			if(!reverse)
 			{
-				if(!mcts.helper.IsPathSafePowerPill(game, updated_path))
+				//TAKE AWAY GHOSTARRIVEFIRST FROM HERE AND PLAYOUT --- not checking for pp
+				if(!mcts.helper.IsPathSafePowerPill(game, updated_path)  && mcts.helper.WillGhostsArriveFirst(game, updated_path[updated_path.length - 1]))
 				{
 					reverse = true;
 					next_dest = previous_pos;
