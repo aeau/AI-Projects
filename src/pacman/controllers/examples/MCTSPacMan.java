@@ -59,17 +59,17 @@ public class MCTSPacMan extends Controller<MOVE>
 //			GameView.addPoints(game, Color.ORANGE, mcts.target);
 //		}
 //		
-		try {
-//			System.out.println(mcts.tactic);
-			previous_pos = pacman_pos;
-			move = mcts.runUCT(game.getPacmanLastMoveMade().ordinal(), timeDue);
-			next_dest = mcts.target;
-			reverse = false;
-			return move;
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+////			System.out.println(mcts.tactic);
+//			previous_pos = pacman_pos;
+//			move = mcts.runUCT(game.getPacmanLastMoveMade().ordinal(), timeDue);
+//			next_dest = mcts.target;
+//			reverse = false;
+//			return move;
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
 //		System.out.println("I COULD PASS TO HERE WTF!!!!");
 		if(game.wasPacManEaten() || game.getCurrentLevelTime() == 0)
@@ -104,9 +104,10 @@ public class MCTSPacMan extends Controller<MOVE>
 				e.printStackTrace();
 			}
 		}
-		else
+		else if(next_dest <= 1296 && pacman_pos <= 1296 )
 		{
 //			mcts.current_pacman_path = game.getShortestPath(game.getPacmanCurrentNodeIndex(), mcts.target);
+			
 			
 			int[] updated_path = game.getShortestPath(pacman_pos, next_dest); //--> error of 1297 index shit
 			//Maybe is when changing level the index already changes

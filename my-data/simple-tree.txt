@@ -1,4 +1,3 @@
-Leaf Actions [GoTo,RunAway,GhostNearby,HasPowerPill,GetNearbyScaredGhost,PowerPillsAround,NearestPill]
 Selector
 {
 Sequence

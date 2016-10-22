@@ -18,7 +18,7 @@ public class Genome
 	//public char[] gen;
 	public ArrayList<Character> genotype = new ArrayList<Character>();
 	public double fitness = 0.0;
-	public int max_layer_bredth = 3;
+	public int max_layer_depth = 3;
 	public int max_leaf_nodes = 4;
 	public int min_gen_size = 20;
 	public int max_gen_size = 40;
@@ -31,7 +31,7 @@ public class Genome
 	{
 		min_gen_size = min_size;
 		max_gen_size = max_size;
-		max_layer_bredth = max_layer;
+		max_layer_depth = max_layer;
 		max_leaf_nodes = max_leaf;
 		
 		//gen = new char[]{'2','[','5','4',']','2','[','6','7','3',']','2','[','8','3',']','2','[','9','3',']'};
@@ -84,12 +84,12 @@ public class Genome
 		
 		for(int i = 0; i < length; i++)
 		{
-			if(!lc.empty() && (lc.peek() >= max_leaf_nodes || lc.size() == max_layer_bredth))
+			if(!lc.empty() && (lc.peek() >= max_leaf_nodes || lc.size() == max_layer_depth))
 			{
 				genotype.add(']');
 				open_brackets--;
 				lc.pop();
-				if(lc.size() != max_layer_bredth)
+				if(lc.size() != max_layer_depth)
 					composite_probability = 50;
 				
 				continue;
@@ -264,7 +264,7 @@ public class Genome
 				else
 					my_nodes.push(n);
 			}
-			int a = g-48;
+			int a = g-48; //Give me the int value of a char 
 			switch(a)
 			{
 				case 1: //Selector

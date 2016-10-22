@@ -11,6 +11,7 @@ import java.time.temporal.JulianFields;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Random;
+import java.util.Stack;
 
 import behaviortree.DataManager;
 import behaviortree.DataSaverLoader;
@@ -18,6 +19,7 @@ import behaviortree.Tree;
 import behaviortree.ga.EvolutionProcess;
 import behaviortree.ga.Genome;
 import dataRecording.DataCollectorController;
+import mcts.MCTSNode;
 import neuralnetwork.NeuralNetwork;
 import pacman.controllers.Controller;
 import pacman.controllers.HumanController;
@@ -72,17 +74,38 @@ public class Executor
 		//HUMAN TEST
 //		exec.runGameTimed(new HumanController(new KeyBoardInput()),new StarterGhosts(),visual);
 		
+		//STACK TEST
+//		MCTSNode a = new MCTSNode("TEST-1");
+//		MCTSNode b = new MCTSNode("TEST-2");
+//		MCTSNode c = new MCTSNode("TEST-3");
+//		MCTSNode current = null;
+//		MCTSNode prev = null;
+//		Stack<MCTSNode> st = new Stack<MCTSNode>();
+//		st.push(a);
+//		st.push(b);
+//		st.push(c);
+//		
+//		current = st.pop();
+//		prev = current;
+//		current = st.pop();
+//		prev.name = "ANOTHER THINGS";
+//		
+//		
+//		System.out.println(prev.name + ";" + current.name);
+		
+		int trials = 100;
 		//FOR MONTE CARLO TREE SEARCH
-//		exec.runExperiment(new MCTSPacMan(),new StarterGhosts(),30);
-//		exec.runExperiment(new MCTSPacMan(),new RandomGhosts(),30);
-//		exec.runExperiment(new MCTSPacMan(),new Legacy2TheReckoning(),100);
+//		exec.runExperiment(new MCTSPacMan(),new StarterGhosts(),trials);
+		exec.runExperiment(new MCTSPacMan(),new Legacy2TheReckoning(),trials);
+//		exec.runExperiment(new MCTSPacMan(),new RandomGhosts(),trials);
+
 //		exec.runExperiment(new MCTSPacMan(),new StupidGhostDontDoAnything(),30);
 //		exec.runGameTimed(new MCTSPacMan(),new PlayoutGhosts(),visual);	
 //		exec.runGameTimed(new MCTSPacMan(),new Legacy(),visual);	
 //		exec.runGameTimed(new MCTSPacMan(),new StupidGhostDontDoAnything(),visual);	
 //		exec.runGameTimed(new MCTSPacMan(),new RandomGhosts(),visual);
 //		exec.runGameTimed(new MCTSPacMan(),new Legacy2TheReckoning(),visual);
-		exec.runGameTimed(new MCTSPacMan(),new StarterGhosts(),visual);	
+//		exec.runGameTimed(new MCTSPacMan(),new StarterGhosts(),visual);	
 		
 //		exec.runGame(new PlayoutPacman(),new Legacy2TheReckoning(),visual, delay);	
 //		exec.runExperiment(new PlayoutPacman(),new Legacy2TheReckoning(),100);
@@ -129,10 +152,12 @@ public class Executor
 		//exec.runExperiment(new RandomPacMan(),new RandomGhosts(),numTrials);
 		
 		//Load tree from txt file
-//		Tree t = DataManager.LoadTree("Champion_copy.txt");
+//		Tree t = DataManager.LoadTree("simple-tree.txt");
 //		exec.runGameTimed(new BehaviorTreePacMan(t),new StarterGhosts(),visual);
 		//exec.runGame(new BehaviorTreePacMan(t),new StarterGhosts(),visual,5);
-		//exec.runExperiment(new BehaviorTreePacMan(t),new StarterGhosts(),100);
+//		exec.runExperiment(new BehaviorTreePacMan(t),new RandomGhosts(),100);
+//		exec.runExperiment(new BehaviorTreePacMan(t),new StarterGhosts(),100);
+//		exec.runExperiment(new BehaviorTreePacMan(t),new Legacy2TheReckoning(),100);
 		//exec.runGameTimed(new HumanController(new KeyBoardInput()),new StarterGhosts(),visual);
 		
 		/*

@@ -17,26 +17,26 @@ import pacman.game.Game;
  */
 public class MCTSNode{
 	
-	public Game state;
-	public List<MCTSNode> children = new ArrayList<MCTSNode>();
-	public ArrayList<Integer> untried_actions = new ArrayList<Integer>();
-	public MCTSNode parent = null;
-	public int opposite_parent = -1;
+	public Game 				state;
+	public List<MCTSNode> 		children 		= new ArrayList<MCTSNode>();
+	public ArrayList<Integer> 	untried_actions = new ArrayList<Integer>();
+	public MCTSNode 			parent 			= null;
+	public int 					opposite_parent = -1;
 	//public int my_action;
-	public float reward = 0;
-	public int times_visited = 0;
-	public int maxChild;
+	public float 				reward 			= 0;
+	public int 					times_visited 	= 0;
+	public int 					maxChild;
 	
 	//Super important variables for tree and default phase.
-	public int move = 0; //movement we do in ordinal
-	public MOVE pacman_move; //movement we do in real Move
-	public int path_cost = 0; //cost of moving through this path.
-	public int destination = 0; //Supposed destination we should reach
-	public MCTSReward my_reward; //Reward used in selection and backpro.
-	public String name = "";
-	public MOVE invalid_child_move;
+	public int 					move 			= 0; 	//movement we do in ordinal
+	public MOVE 				pacman_move; 			//movement we do in real Move
+	public int 					path_cost 		= 0; 	//cost of moving through this path.
+	public int 					destination 	= 0; 	//Supposed destination we should reach
+	public MCTSReward 			my_reward; 				//Reward used in selection and backpro.
+	public String 				name 			= "";
+	public MOVE 				invalid_child_move;
 	
-	public int[] my_path = null;
+	public int[] 				my_path = null;
 	
 	//FOR DEBUGGING PURPOSES
 	public int[] safe_path = null;
@@ -52,6 +52,16 @@ public class MCTSNode{
 		
 		
 		this.my_reward = new MCTSReward();
+	}
+	
+	public MCTSNode()
+	{
+		
+	}
+	
+	public MCTSNode(String name)
+	{
+		this.name = name;
 	}
 	
 	public void SetPath(int... path)
@@ -109,5 +119,26 @@ public class MCTSNode{
 //		my_reward.pill_reward += reward.pill_reward;
 //		my_reward.ghost_reward += reward.ghost_reward;
 //		my_reward.survival_reward += reward.survival_reward;
+	}
+	
+	public MCTSNode copy()
+	{
+		MCTSNode copy = new MCTSNode();
+		copy.state = state.copy();         
+		copy.children = children;	
+		copy.untried_actions = untried_actions;
+		copy.parent = parent;		
+		copy.opposite_parent = opposite_parent;
+		copy.reward = reward;
+		copy.times_visited = times_visited;
+		copy.maxChild = maxChild;      
+		copy.move = move;			
+		copy.pacman_move = pacman_move; 	
+		copy.path_cost = path_cost;		
+		copy.destination = destination;	
+		copy.my_reward = my_reward; 		
+		copy.name = name;		
+		copy.invalid_child_move = invalid_child_move;
+		return copy;
 	}
 }

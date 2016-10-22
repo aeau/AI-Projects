@@ -95,10 +95,12 @@ public class MCTSReward
 		float pr = -1000.0f;
 		float gr = -1000.0f;
 		float sr = -1000.0f;
+		float child_counter = 0.0f;
 		if(!children.isEmpty())
 		{
 			for(MCTSNode child : children)
 			{
+				child_counter += child.times_visited;
 				if(child.my_reward.MAX_pill_reward * child.my_reward.MAX_survival_reward >= pr)
 					pr = child.my_reward.MAX_pill_reward * child.my_reward.MAX_survival_reward;
 				
@@ -112,6 +114,18 @@ public class MCTSReward
 			MAX_pill_reward = pr;
 			MAX_ghost_reward = gr;
 			MAX_survival_reward = sr;
+//			if((child_counter / (float)(children.get(0).parent.times_visited)) < 0.5f)
+//			{
+//				MAX_pill_reward = pr;
+//				MAX_ghost_reward = gr;
+//				MAX_survival_reward = sr;
+//			}
+//			else
+//			{
+//				MAX_pill_reward = norm_pill_reward;
+//				MAX_ghost_reward = norm_ghost_reward;
+//				MAX_survival_reward = norm_survival_reward;
+//			}
 			
 			// I THINK THIS IS GOOD ALREADY
 		}

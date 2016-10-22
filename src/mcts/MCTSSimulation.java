@@ -43,6 +43,9 @@ public class MCTSSimulation {
 	
 	
 	private Stack<MCTSNode> selected_nodes;
+	private int		max_tree_depth		= -1;
+	
+	
 	private boolean dead 				= false;
 	private boolean ate_pp 				= false;
 	private boolean ate_ghost			= false;
@@ -57,6 +60,7 @@ public class MCTSSimulation {
 	private Game 	playout_state 		= null;
 	private float 	starting_time 		= 0.0f;
 	private boolean reverse 			= false;
+	private boolean unsafe_move			= false;
 	private MOVE 	current_pacman_act	= MOVE.NEUTRAL;
 	private int 	previous_pacman_pos = -1;
 	private int 	next_dest 			= -1;
@@ -83,6 +87,11 @@ public class MCTSSimulation {
 	public MCTSSimulation()
 	{
 		
+	}
+	
+	public int GetMaxTreeDepth()
+	{
+		return max_tree_depth;
 	}
 	
 	public void init(Stack<MCTSNode> nodes, MCTSNode root_node, HelperExtendedGame current_helper, long time_due, int target, Tactics tactic)
@@ -112,6 +121,8 @@ public class MCTSSimulation {
 	
 	private void ResetEverything()
 	{
+		max_tree_depth 		= -1;
+		
 		initial_maze 		= 0;     
 		initial_ghosts 		= 0.0f;  
 		initial_pills 		= 0.0f;  
@@ -134,7 +145,8 @@ public class MCTSSimulation {
 		                             
 		playout_state 		= null;  
 		starting_time 		= 0.0f;        
-		reverse 			= false;        
+		reverse 			= false; 
+		unsafe_move			= false;
 		current_pacman_act	= MOVE.NEUTRAL; 
 		previous_pacman_pos = -1;           
 		helper 				 = null;
@@ -174,10 +186,47 @@ public class MCTSSimulation {
 			}
 		}
 		
-		if(st.isJunction(st.getPacmanCurrentNodeIndex()) && !dead)
+		if(this.current_tactic == Tactics.ENDGAME &&
+				!target_reached &&
+			st.getShortestPathDistance(st.getPacmanCurrentNodeIndex(), this.target) < 3)
 		{
-			last_visited_junc = st.getPacmanCurrentNodeIndex();
-			last_visited_state = st.copy();
+			target_reached = true;
+		}
+		
+		previous_state = st.copy();
+	}
+	
+	private void UpdateInfoTreePhase(Game st, Game previous_state)
+	{
+		if(st.wasPacManEaten()) { dead = true; }
+		if(st.wasPillEaten()) pills_eaten += 1.0f;
+		if(st.wasPowerPillEaten())
+		{
+			power_pills_eaten += 1.0f;
+			if(ate_pp)
+			{
+				ilegal_power_pill = true;
+			}
+			else
+			{
+				ate_pp = true;
+			}
+		}
+		
+		for(GHOST ghost : GHOST.values())
+		{
+			if(st.wasGhostEaten(ghost))
+			{
+				ghost_eaten += 1.0f;
+				ghost_multiplier += previous_state.getGhostEdibleTime(ghost);
+				ate_ghost = true;
+			}
+		}
+		
+		if(previous_state.isJunction(previous_state.getPacmanCurrentNodeIndex()) && !dead)
+		{
+			last_visited_junc = previous_state.getPacmanCurrentNodeIndex();
+			last_visited_state = previous_state.copy();
 		}
 		
 		if(this.current_tactic == Tactics.ENDGAME &&
@@ -208,18 +257,17 @@ public class MCTSSimulation {
 		MCTSNode current = selected_nodes.pop();
 		int pacman_pos = current_state.getPacmanCurrentNodeIndex();
 		Game previous_state = current_state.copy();
-		
-		
 		//Don't follow path just get to destination in next node.
 		
 		outer:
 		while(current != null && !TreePhaseOver(current_state))
-		{
+		{	
+			max_tree_depth += current.path_cost;
 			next_dest = current.destination;
 			previous_pacman_pos = pacman_pos;
 			//we take the movement of the current node.
 			current_state.advanceGame(current.pacman_move, GhostsPlayout(current_state));
-			UpdateInfo(current_state, previous_state);
+			UpdateInfoTreePhase(current_state, previous_state);
 			if(TreePhaseOver(current_state))
 			{
 				break outer;
@@ -236,10 +284,11 @@ public class MCTSSimulation {
 				MOVE next_pacman_move = current_state.getPossibleMoves(pacman_pos, current_state.getPacmanLastMoveMade())[0];
 //				current_state.advanceGame(next_pacman_move, GhostsPlayout(current_state));
 				current_state.advanceGame(next_pacman_move, getGhostMove(current_state));
-				UpdateInfo(current_state, previous_state);
+//				current_state.advanceGame(next_pacman_move, randomGhostMovement(current_state));
+				UpdateInfoTreePhase(current_state, previous_state);
 				if(TreePhaseOver(current_state))
 				{
-					break follow_path;
+					break outer;
 				}
 			}
 			
@@ -249,6 +298,7 @@ public class MCTSSimulation {
 				current = selected_nodes.pop();
 			else
 				current = null;
+
 		}
 		
 //		System.out.println("We go out of the loop, a.k.a we aarrived to destination; TIME: " + MCTSConstants.TIMES);
@@ -257,8 +307,13 @@ public class MCTSSimulation {
 		{
 			playout_state = last_visited_state.copy();
 		}
-		
-			playout_state = current_state.copy();
+//		
+		if((dead || ilegal_power_pill))
+		{
+			max_tree_depth -= current.path_cost;
+		}
+
+		playout_state = current_state.copy();
 	}
 
 	private MCTSReward PerformPlayoutPhase()
@@ -309,7 +364,7 @@ public class MCTSSimulation {
 				action_done = true;
 				reverse = false;
 			}
-			else if(!reverse)//IN THE PATH
+			else if(!reverse && next_dest <= 1296 && pacman_pos <= 1296 )//IN THE PATH
 			{
 				int[] updated_path = playout_state.getShortestPath(pacman_pos, next_dest); //--> TODO: check next_dest from time to time gives -1 ... FU
 				int index = PacmanPlayoutPath(playout_state, updated_path);
@@ -327,9 +382,10 @@ public class MCTSSimulation {
 			{
 				current_pacman_act = playout_state.getPossibleMoves(pacman_pos, playout_state.getPacmanLastMoveMade())[0];	
 			}
-					
+			
 			playout_state.advanceGame(current_pacman_act,getGhostMove(playout_state));	
-//			current_state.advanceGame(current_pacman_act, GhostsPlayout(playout_state));
+//			playout_state.advanceGame(current_pacman_act, GhostsPlayout(playout_state));
+//			playout_state.advanceGame(RandomPacmanMove(playout_state), randomGhostMovement(playout_state));
 			UpdateInfo(playout_state, previous_state);
 		}
 		
@@ -382,11 +438,11 @@ public class MCTSSimulation {
 			pill_score = pills_eaten / (float)initial_pills;
 		}
 		
-		if(ghost_eaten > 0)
+		if(ghost_multiplier > 0)
 		{
 //				System.out.println("WTF IS THIS VALUE AT THE END ?: " + EDIBLE_TIME*(Math.pow(EDIBLE_TIME_REDUCTION,helper.maze_index%LEVEL_RESET_REDUCTION)));
 //				System.out.println("GHOST MULTIPLIER BEFORE NORMALIZATION: " + ghost_time_multiplier + ", GHOST EATEN BEFORE NORM: " + ghost_eaten);
-			ghost_eaten /= 4.0f;
+//			ghost_eaten /= 4.0f;
 			ghost_multiplier /= (EDIBLE_TIME*(Math.pow(EDIBLE_TIME_REDUCTION,helper.maze_index%LEVEL_RESET_REDUCTION)) * 4.0f);
 //				System.out.println("GHOST MULTIPLIER AFTER NORMALIZATION: " + ghost_time_multiplier + ", GHOST EATEN AFTER NORM: " + ghost_eaten);
 			ghost_score = ghost_multiplier; //MAYBE WE NEED THE GHOST EATEN
@@ -396,7 +452,7 @@ public class MCTSSimulation {
 		if(ate_pp && current_tactic != Tactics.ENDGAME)
 		{
 			
-			if(ghost_multiplier >= MCTSConstants.GHOST_SCORE_THRESHOLD) //MAYBE GHOST EATEN INSTEAD OF MULTIPLER //TODO:
+			if(ghost_score >= MCTSConstants.GHOST_SCORE_THRESHOLD) //MAYBE GHOST EATEN INSTEAD OF MULTIPLER //TODO:
 			{
 				pill_score += ghost_score;
 //				System.out.println("THE REWARD IS TASTY");
@@ -422,11 +478,9 @@ public class MCTSSimulation {
 	//TODO: CHECK THE VALUES AFTER ISPATHSAFE
 	public int PacmanPlayoutPath(Game st, int... path)
 	{
-		boolean just_ate = false;
-		
 		if(!reverse)
 		{
-			if(!helper.IsPathSafePowerPill(st, path) && helper.WillGhostsArriveFirst(st, path[path.length - 1]))
+			if(unsafe_move && !helper.IsPathSafePowerPill(st, path) && helper.WillGhostsArriveFirst(st, path[path.length - 1]))
 			{
 //					System.out.println("I'M SCARED PLEAE DONT KILL ME GHOST");
 				reverse = true;
@@ -518,6 +572,7 @@ public class MCTSSimulation {
 		ArrayList<MOVE> moves = new ArrayList<MOVE>();
 		MOVE selected_move = null;
 		int path_pills = 0;
+		unsafe_move = false;
 		
 		moves:
 		for(MOVE move : possibleMoves)
@@ -556,6 +611,7 @@ public class MCTSSimulation {
 		
 		if(safe_moves.isEmpty())
 		{
+			unsafe_move = true;
 			if(!moves.isEmpty())
 				return moves.get(random.nextInt(moves.size()));
 			else
@@ -565,6 +621,26 @@ public class MCTSSimulation {
 		}
 		
 		return safe_moves.get(random.nextInt(safe_moves.size()));
+	}
+	
+	public MOVE RandomPacmanMove(Game st)
+	{
+		MOVE[] possibleMoves=st.getPossibleMoves(st.getPacmanCurrentNodeIndex(),st.getPacmanLastMoveMade());
+		return possibleMoves[random.nextInt(possibleMoves.length)];
+	}
+	
+	public EnumMap<GHOST,MOVE> randomGhostMovement(Game st)
+	{
+		EnumMap<GHOST,MOVE> moves=new EnumMap<GHOST,MOVE>(GHOST.class);
+		
+		for(GHOST ghostType : GHOST.values())
+		{
+			MOVE[] poss = st.getPossibleMoves(st.getGhostCurrentNodeIndex(ghostType), st.getGhostLastMoveMade(ghostType));
+			if(st.doesGhostRequireAction(ghostType))
+				moves.put(ghostType,poss[random.nextInt(poss.length)]);
+		}
+		
+		return moves;
 	}
 
 	public static final int CROWDED_DISTANCE=30;

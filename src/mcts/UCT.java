@@ -218,13 +218,10 @@ public class UCT {
             
             
             IterateAllScores(rootNode);
-//            SelectTactic(rootNode.state);
+            SelectTactic(rootNode.state); //TODO: SUPPOSE THIS HAVE TO GO OUT
             
             currentNode = BestChild(0.0f);
             MOVE bestAction = currentNode.pacman_move;
-            
-            
-            
             
 //            previous_target = this.game.getPacmanCurrentNodeIndex();
             target = currentNode.destination;
@@ -269,7 +266,7 @@ public class UCT {
 //			Color result_color = new Color(r_c/255.0f, g_c/255.0f, b_c/255.0f);
 ////			Color col = new Color(node.GetMaxValue(tactic),1.0f,1.0f);
 //			GameView.addPoints(game,result_color, child.destination);
-			DebugConsideredDestinations(child);
+//			DebugConsideredDestinations(child);
 			counter++;
 		}
 //		while(node.children.size() != counter)
@@ -943,8 +940,21 @@ public class UCT {
 	
 	private void Backpropagate(MCTSReward reward)
 	{
+//		currentNode = simulator.GetLastNodeExplored();
+		int tree_depth = simulator.GetMaxTreeDepth();
+//		
+//		System.out.println("SIM TREE DEPTH: " + tree_depth);
+//		System.out.println("CURRENT FUCKING DEPTH: " + current_depth);
+		
 		while(currentNode != null)
 		{
+//			if(current_depth > tree_depth)
+//			{
+//				current_depth -= currentNode.path_cost;
+//				currentNode= currentNode.parent;
+//				continue;
+//			}
+//			
 			currentNode.times_visited++;
 			currentNode.IncreaseReward(reward);
 //			reward = currentNode.reward;
@@ -1025,23 +1035,22 @@ public class UCT {
 			return currentNode;
 		}
 		
-		if(nt.times_visited > MCTSConstants.CHILD_VISITED_THRESHOLD)
+		for(MCTSNode n : nt.children)
 		{
-			for(MCTSNode n : nt.children)
+			if(n.times_visited < MCTSConstants.CHILD_VISITED_THRESHOLD)
 			{
-				float uct = UCTvalue(n, nt, c);
-	//			float uct = n.reward;
-				if(uct > best_one)
-				{
-					bestChild = n;
-					best_one = uct;
-				}
+				bestChild = nt.GetRandomChild(random);
+				break;
+			}
+			float uct = UCTvalue(n, nt, c);
+//			float uct = n.reward;
+			if(uct > best_one)
+			{
+				bestChild = n;
+				best_one = uct;
 			}
 		}
-		else
-		{
-			bestChild = nt.GetRandomChild(random);
-		}
+
 		
 		bestChild.parent = currentNode;
 		currentNode = bestChild;
@@ -1136,7 +1145,7 @@ public class UCT {
 		child.parent = currentNode;
 		child.maxChild = CalculateChildrenAndActions(child);
 		child.SetPathCost(path_distance);
-		
+		current_depth += path_distance;
 		currentNode = child;
 //		child.SetPath(current_pacman_path);
 //		child.destination = target;
