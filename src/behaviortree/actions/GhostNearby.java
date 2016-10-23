@@ -1,10 +1,13 @@
 package behaviortree.actions;
 
 import behaviortree.BlackBoard;
-import pacman.game.Constants.DM;
 import pacman.game.Constants.GHOST;
-import pacman.game.Game;
 
+/**
+ * if there is a ghost close enough to the agent in a non-edible state we set it as a target
+ * @author A. Alvarez
+ *
+ */
 public class GhostNearby extends Action{
 	
 	@Override

@@ -1,5 +1,10 @@
 package behaviortree;
 
+/**
+ * Selector object which run children until a success state in one of them is reached.
+ * @author A. Alvarez
+ *
+ */
 public class Selector extends Composite
 {
 

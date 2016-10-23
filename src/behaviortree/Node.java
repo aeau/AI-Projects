@@ -2,13 +2,18 @@ package behaviortree;
 
 import java.util.ArrayList;
 
-
+/**
+ * Abstract class that encapsulates individual information for the tree
+ * @author A. Alvarez
+ *
+ */
 public abstract class Node 
 {
 
-	protected ArrayList<Node> children;
-	protected Node parent;
-	protected NodeState state;
+	
+	protected ArrayList<Node> 	children; //children nodes
+	protected Node 				parent;
+	protected NodeState 		state; //current state of the node
 	
 	public Node()
 	{
@@ -35,6 +40,10 @@ public abstract class Node
 		state = new_state;
 	}
 	
+	/**
+	 * Formatting to save node in txt file.
+	 * @return save format
+	 */
 	public String SaveFormat()
 	{
 		String result = "";

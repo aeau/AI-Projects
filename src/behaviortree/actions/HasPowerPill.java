@@ -3,6 +3,11 @@ package behaviortree.actions;
 import behaviortree.BlackBoard;
 import pacman.game.Constants.GHOST;
 
+/**
+ * If any ghost is in the edible state, means that we are still in thee effects of the power pill
+ * @author A. Alvarez
+ *
+ */
 public class HasPowerPill extends Action {
 
 	@Override

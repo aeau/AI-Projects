@@ -1,10 +1,13 @@
 package behaviortree.actions;
 
-import java.util.ArrayList;
-
 import behaviortree.BlackBoard;
 import pacman.game.Constants.DM;
 
+/**
+ * If there is a target set when this action is prompted, it will get next move towards the said target
+ * @author A. Alvarez
+ *
+ */
 public class GoTo extends Action{
 
 	@Override

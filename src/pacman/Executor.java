@@ -96,16 +96,20 @@ public class Executor
 		int trials = 100;
 		//FOR MONTE CARLO TREE SEARCH
 //		exec.runExperiment(new MCTSPacMan(),new StarterGhosts(),trials);
-		exec.runExperiment(new MCTSPacMan(),new Legacy2TheReckoning(),trials);
+//		exec.runExperiment(new MCTSPacMan(),new Legacy2TheReckoning(),trials);
 //		exec.runExperiment(new MCTSPacMan(),new RandomGhosts(),trials);
 
 //		exec.runExperiment(new MCTSPacMan(),new StupidGhostDontDoAnything(),30);
 //		exec.runGameTimed(new MCTSPacMan(),new PlayoutGhosts(),visual);	
 //		exec.runGameTimed(new MCTSPacMan(),new Legacy(),visual);	
-//		exec.runGameTimed(new MCTSPacMan(),new StupidGhostDontDoAnything(),visual);	
-//		exec.runGameTimed(new MCTSPacMan(),new RandomGhosts(),visual);
-//		exec.runGameTimed(new MCTSPacMan(),new Legacy2TheReckoning(),visual);
+//		exec.runGameTimed(new MCTSPacMan(),new StupidGhostDontDoAnything(),visual);
+		
+		//TEST
 //		exec.runGameTimed(new MCTSPacMan(),new StarterGhosts(),visual);	
+//		exec.runGameTimed(new MCTSPacMan(),new Legacy(),visual);	
+//		exec.runGameTimed(new MCTSPacMan(),new AggressiveGhosts(),visual);
+//		exec.runGameTimed(new MCTSPacMan(),new Legacy2TheReckoning(),visual);
+//		exec.runGameTimed(new MCTSPacMan(),new RandomGhosts(),visual);
 		
 //		exec.runGame(new PlayoutPacman(),new Legacy2TheReckoning(),visual, delay);	
 //		exec.runExperiment(new PlayoutPacman(),new Legacy2TheReckoning(),100);

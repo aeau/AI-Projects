@@ -4,6 +4,11 @@ import pacman.game.Constants.GHOST;
 import pacman.game.Constants.MOVE;
 import pacman.game.Game;
 
+/**
+ * global state and variables used through the tree to communicate between nodes
+ * @author A. Alvarez
+ *
+ */
 public class BlackBoard 
 {
 	public Game current_game;

@@ -3,6 +3,11 @@ package behaviortree.actions;
 import behaviortree.BlackBoard;
 import pacman.game.Constants.DM;
 
+/**
+ * if there is a target to flee from, gets the next movement away from the said target 
+ * @author A. Alvarez
+ *
+ */
 public class RunAway extends Action{
 
 	@Override

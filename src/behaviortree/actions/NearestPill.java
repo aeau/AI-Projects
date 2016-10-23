@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import behaviortree.BlackBoard;
 import pacman.game.Constants.DM;
 
+/**
+ * Check for the nearest pill placed anywhere in the maze
+ * @author A. Alvarez
+ *
+ */
 public class NearestPill extends Action{
 
 	@Override

@@ -6,8 +6,8 @@ import pacman.game.Game;
 
 public class Tree 
 {
-	public Node root;
-	public BlackBoard my_blackboard;
+	public Node root;// starting point of the tree
+	public BlackBoard my_blackboard; //unique blackboard object passed through the tree
 	
 	public Tree()
 	{
@@ -58,17 +58,28 @@ public class Tree
 		
 	}
 	
+	/**
+	 * Run the tree in a depth-first search way
+	 */
 	public void Execute()
 	{
 		root.Run(my_blackboard);
 	}
 	
+	/**
+	 * Update current state of the game into the blackboard
+	 * @param game
+	 */
 	public void UpdateGameState(Game game)
 	{
 		my_blackboard.current_game = game;
 		my_blackboard.pacman_position = game.getPacmanCurrentNodeIndex();
 	}
 	
+	/**
+	 * 
+	 * @return next movement to be perform by the agent
+	 */
 	public MOVE GetMove()
 	{
 		return my_blackboard.next_move;

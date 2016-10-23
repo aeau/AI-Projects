@@ -21,17 +21,8 @@ public class DataManager {
 		try
 		{
 			String[][] data = DataSaverLoader.readDataFile(data_to_load,";", "-", false);
-			
-			
-			//Class<?> clazz = Class.forName("behaviortree.actions.GoTo");
-			//Constructor<?> constructor = clazz.getConstructor(String.class, Integer.class);
-			//Object instance = constructor.newInstance("stringparam", 42);
-			
-			//Object action = clazz.newInstance();
-			
 			for(String[] branches : data)
 			{
-				
 				if(branches[0].equals("}"))
 				{
 					if(my_nodes.peek() != root)
@@ -105,7 +96,7 @@ public class DataManager {
 					Object action = action_class.newInstance();
 					my_nodes.peek().AddChild(new Leaf(my_nodes.peek(), action));
 					
-					//Uncomment if you prefer switch cases
+					//Uncomment for switch cases instead of reflection
 					/*
 					switch(branches[1])
 					{

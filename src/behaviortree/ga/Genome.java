@@ -14,14 +14,29 @@ import pacman.game.internal.Ghost;
 
 public class Genome 
 {
-	//public String genotype; 
-	//public char[] gen;
-	public ArrayList<Character> genotype = new ArrayList<Character>();
-	public double fitness = 0.0;
-	public int max_layer_depth = 3;
-	public int max_leaf_nodes = 4;
-	public int min_gen_size = 20;
-	public int max_gen_size = 40;
+	
+	//genotype is represented as characters
+	public ArrayList<Character> genotype 	= new ArrayList<Character>();
+	public double fitness 					= 0.0;
+	
+	//adjusted parameters for creating the first population
+	public int max_layer_depth 				= 3; //no more layers than this
+	public int max_leaf_nodes 				= 4; //a composite node cannot have more than this amount of leaf nodes
+	public int min_gen_size 				= 20;//minimum size of the gen based on handmade behavior tree
+	public int max_gen_size 				= min_gen_size * 2;
+	
+	/**
+	 * Gene values
+	 * 1 = selector
+	 * 2 = sequence
+	 * 3 = GoTo action
+	 * 4 = RunAway action
+	 * 5 = GhostNearby action
+	 * 6 = HasPowerPill action
+	 * 7 = GetNearbyScaredGhost action
+	 * 8 = PowerPillsAround action
+	 * 9 = NearestPill action
+	 */
 	
 	public Genome()
 	{
@@ -34,7 +49,10 @@ public class Genome
 		max_layer_depth = max_layer;
 		max_leaf_nodes = max_leaf;
 		
-		//gen = new char[]{'2','[','5','4',']','2','[','6','7','3',']','2','[','8','3',']','2','[','9','3',']'};
+		//typical gen sequence:
+		//gen = new char[]{'1','[','2','[','5','4',']','2','[','6','7','3',']','2','[','8','3',']','2','[','9','3',']',']'};
+		//this will result in: 1[2[54]2[673]2[83]2[93]]
+		
 		
 		/*
 		switch(Character.getNumericValue(g))
@@ -70,20 +88,20 @@ public class Genome
 		*/
 	}
 	
+	/**
+	 * Composition of genome in the first population
+	 */
 	public void InitGenome()
 	{
-		Random r = new Random();
-		int open_brackets = 0;
-		int length = r.nextInt(min_gen_size) + max_gen_size;
-		Stack<Integer> lc = new Stack<Integer>();
-		
-		int leaf_probability = 50;
-		int composite_probability = 50;
-		
-		//Open brackets + layer counter need to be fixed
+		Random r 					= new Random();
+		Stack<Integer> lc 			= new Stack<Integer>();
+		int open_brackets 			= 0;
+		int length 					= r.nextInt(min_gen_size) + max_gen_size;
+		int composite_probability 	= 50;
 		
 		for(int i = 0; i < length; i++)
 		{
+			//if the treee have reach maximum depth or a composite node have enough leaf nodes, it is forced to close
 			if(!lc.empty() && (lc.peek() >= max_leaf_nodes || lc.size() == max_layer_depth))
 			{
 				genotype.add(']');
@@ -95,6 +113,7 @@ public class Genome
 				continue;
 			}
 			
+			//depending on the probability, it will create a composite node or a leaf node
 			if(r.nextInt(100) <= composite_probability)
 			{
 				composite_probability = 30;
@@ -116,35 +135,20 @@ public class Genome
 				}
 				composite_probability += 5;
 			}
-			
-			/*
-			int rand = r.nextInt(9) + 1;
-			
-			if(rand == 1 || rand == 2)
-			{
-				gen.add((char)(rand + '0'));
-				gen.add('[');
-				open_brackets++;
-				lc.push(0);
-			}
-			else
-			{
-				gen.add((char)(rand + '0'));
-				if(!lc.empty())
-				{
-					int c = lc.pop();
-					c++;
-					lc.push(c);
-				}
-			}*/
 		}
 		
+		//Error checking if there is any open bracket to be close
 		for(int i = 0; i < open_brackets; i++)
 		{
 			genotype.add(']');
 		}
 	}
 	
+	/**
+	 * Crossover method to be applied to this newly generated genome, one point uniform
+	 * @param p1 , a part of the first parent
+	 * @param p2 , a part of the second parent
+	 */
 	public void GenerateGenome(List<Character> p1, List<Character> p2)
 	{
 		Stack<Object> brackets = new Stack<Object>();
@@ -155,7 +159,8 @@ public class Genome
 			genotype.add(c);
 		}
 		
-		//Some checks
+		//error checking, if the starting gene of the second parent is "[" or "]"
+		//and the current genotype has thaat gene at the end, it just remove last gene in the genotype
 		if(p2.get(0) == '[' && genotype.get(genotype.size() - 1) == '[')
 		{
 			genotype.remove(genotype.size() - 1);
@@ -170,6 +175,7 @@ public class Genome
 			genotype.add(c);
 		}
 		
+		//Error checking brackets badly open or closed in resulting genotype
 		for(int i = 0; i < genotype.size(); i++)
 		{
 			if(genotype.get(i) == '[')
@@ -211,37 +217,46 @@ public class Genome
 		}
 		catch(Exception e)
 		{
-			System.out.println(PrintGenome());
+			System.out.println(PrintGenome()); //print invalid genomes
 		}
 	}
 	
+	/**
+	 * TODO: add gene in a position
+	 */
 	public void AddGene()
 	{
 		
 	}
 	
+	/**
+	 * TODO: remove gene in a position
+	 */
 	public void RemoveGene()
 	{
 		
 	}
 	
-	public void Serialize()
-	{
-		
-	}
-	
+	/**
+	 * Format genotype to be printed in console
+	 * @return genotype string
+	 */
 	public String PrintGenome()
 	{
-		String result = "";
+		StringBuilder sb = new StringBuilder();
 		for(char c : genotype)
 		{
-			result += c;
+			sb.append(c);
 		}
 		
-		return result;
+		return sb.toString();
 		
 	}
 	
+	/**
+	 * It creates a behavior tree from the current representation (genotype)
+	 * @return the generated tree
+	 */
 	public Tree Deserialize()
 	{
 		Stack<Node> my_nodes = new Stack<Node>();
@@ -299,11 +314,6 @@ public class Genome
 		
 		t.root = my_nodes.pop();
 		return t;
-	}
-	
-	public int ConvertCharToInt(char c)
-	{
-		return 0;
 	}
 
 	public double getFitness() {

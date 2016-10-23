@@ -20,8 +20,7 @@ public class BehaviorTreePacMan extends Controller<MOVE>{
 	public MOVE getMove(Game game, long timeDue) 
 	{
 		my_tree.UpdateGameState(game);
-		my_tree.Execute();
-		//DataManager.SaveTree(my_tree);
+		my_tree.Execute(); //execute tree to the end
 		my_tree.my_blackboard.target = -1;
 		return my_tree.GetMove();
 	}

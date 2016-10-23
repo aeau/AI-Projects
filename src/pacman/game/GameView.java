@@ -358,8 +358,7 @@ public final class GameView extends JComponent
             getContentPane().add(BorderLayout.CENTER,comp);
             pack();
             Dimension screen=Toolkit.getDefaultToolkit().getScreenSize();
-            //this.setLocation((int)(screen.getWidth()*3/8),(int)(screen.getHeight()*3/8));     
-            this.setLocation(gd[1].getDefaultConfiguration().getBounds().x + gd[1].getDefaultConfiguration().getBounds().width /2,  (int)(screen.getHeight()*3/8));
+            this.setLocation((int)(screen.getWidth()*3/8),(int)(screen.getHeight()*3/8));     
             this.setVisible(true);
             this.setResizable(false);
             setDefaultCloseOperation(EXIT_ON_CLOSE);

@@ -3,6 +3,11 @@ package behaviortree.actions;
 import behaviortree.BlackBoard;
 import pacman.game.Constants.GHOST;
 
+/**
+ * If the agent have an edible ghost close enough, it set the ghost as a target
+ * @author A. Alvarez
+ *
+ */
 public class GetNearbyScaredGhost extends Action{
 
 	@Override

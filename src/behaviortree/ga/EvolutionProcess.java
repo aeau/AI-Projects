@@ -11,17 +11,25 @@ import pacman.controllers.examples.StarterGhosts;
 
 public class EvolutionProcess 
 {
-	public ArrayList<Genome> population = new ArrayList<Genome>();
-	public Genome champion;
-	private int generation;
-	private int max_generation = 500;
-	private int population_size;
-	public ArrayList<String> results = new ArrayList<String>();
 	
-	public static boolean SAVE_DATA = true;
-	static String SEPARATION_CHARACTER=";";
-    static String FILENAME = "result.csv";
+	public ArrayList<Genome> 	population = new ArrayList<Genome>(); //current population
+	public Genome 				champion; //current champion in the population
+	private int 				generation; //current generation
+	private int 				max_generation = 500; //max number of generations
+	private int 				population_size; //initial fixed size
+	public ArrayList<String> 	results = new ArrayList<String>(); //results each gen
 	
+	/**
+	 * variables to save results of each generation 
+	 */
+	public static boolean 		SAVE_DATA = true;
+	static String 				SEPARATION_CHARACTER=";";
+    static String 				FILENAME = "result.csv";
+	
+    /**
+     * Generate the first population
+     * @param population_size
+     */
 	public EvolutionProcess(int population_size)
 	{
 		this.population_size = population_size;
@@ -38,15 +46,19 @@ public class EvolutionProcess
 		
 	}
 	
+	/**
+	 * Fitness evaluation of the population
+	 */
 	public void EvaluateIndividuals()
 	{
 		//First we evaluate for score: weighted sum between score and small and power pills
 		//Second we evaluate for surviving longer.
 		Executor exec=new Executor();
+		int trials = 10;
 		
 		for(Genome g : population)
 		{
-			ArrayList<Double> res = exec.runExperimentEvolution(new BehaviorTreePacMan(g.Deserialize()),new StarterGhosts(),10);
+			ArrayList<Double> res = exec.runExperimentEvolution(new BehaviorTreePacMan(g.Deserialize()),new StarterGhosts(),trials);
 			double fitness = res.get(0) + (0.5 * res.get(1)) + res.get(2) + (0.25 * res.get(3));
 			//res[0] = avg_score
 			//res[1] = avg_small_pills
@@ -55,18 +67,23 @@ public class EvolutionProcess
 			
 			g.fitness = fitness;
 		}
-
-		
 	}
+	
 	
 	public void SaveChampion(Genome champ)
 	{
 		champion = champ;
 	}
 	
+	
+	/**
+	 * Selection strategy = Tournament
+	 * Select 2 random genomes from the poulation compare then and pick best one
+	 * repeat processs until 2 parents are selected and create new 2 offsprings
+	 * Finish by generational replacement
+	 */
 	public void SelectIndividuals()
 	{
-		//Select by tournament
 		Random rand = new Random();
     	Genome[] parents = new Genome[2];
     	ArrayList<Genome> new_generation = new ArrayList<Genome>();;
@@ -89,13 +106,19 @@ public class EvolutionProcess
     		}
     	}
     	
-    	//Generational replacement just for the lulz
+    	//Generational replacement
     	for(int i = 0; i < population_size; i++)
     	{
     		population.set(i, new_generation.get(i));
     	}
 	}
 	
+	/**
+	 * Linear crossover, it selects a percentage and divide each gene by it.
+	 * it is possible to cross different genome sizes. (actually is really probable to happens)
+	 * @param parents
+	 * @return
+	 */
 	public Genome[] Reproduction(Genome[] parents)
 	{
 		//Linear crossover for starters
@@ -117,11 +140,6 @@ public class EvolutionProcess
 		return offsprings;
 	}
 	
-	public void Replacement(ArrayList<Genome> offsprings)
-	{
-		//Elite + worst fit replacement
-	}
-	
 	public void ExecuteEvolution()
 	{
 		InitPopulation();
@@ -137,12 +155,12 @@ public class EvolutionProcess
         {
 			while(generation != max_generation)
 			{
+				
+				//Fitness evaluation
 				EvaluateIndividuals();
 				//Sort population by fitness -- lambda
 				//population.sort((o1, o2) -> Double.compare(o1.fitness, o2.fitness));
-				
-				
-				
+
 				for(int i = 0; i < population.size(); i++){
 	                double currFitness = population.get(i).getFitness();
 	                avgFitness += currFitness;
@@ -158,6 +176,8 @@ public class EvolutionProcess
 	            }
 				SaveChampion(best);
 	            if(population.size()>0){ avgFitness = avgFitness/population.size(); }
+	            
+	            //Deebug to console.
 	            String output = "Generation: " + generation;
 	            output += "\t AvgFitness: " + avgFitness;
 	            output += "\t MinFitness: " + minFitness + " (" + worstIndividual +")";
@@ -175,6 +195,7 @@ public class EvolutionProcess
 	            
 	            results.add(output);
 				
+	            //Selection + reproduction + replacement
 	            SelectIndividuals();
 				generation++;
 			}

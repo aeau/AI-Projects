@@ -1,9 +1,12 @@
 package behaviortree;
 
-import java.util.ArrayList;
-
 import behaviortree.actions.Action;
 
+/**
+ * Leaf node will be in charge of executing actions in the tree
+ * @author A. Alvarez
+ *
+ */
 public class Leaf extends Node {
 	
 	public Action action;
@@ -34,6 +37,10 @@ public class Leaf extends Node {
 		action = (Action)a;
 	}
 	
+	
+	/**
+	 * We execute the action and await for the state returned
+	 */
 	@Override
 	public NodeState Run(BlackBoard blackboard) {
 		// TODO Auto-generated method stub

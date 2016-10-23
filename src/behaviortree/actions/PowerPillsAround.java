@@ -4,6 +4,11 @@ import behaviortree.BlackBoard;
 import pacman.game.Constants.DM;
 import pacman.game.Constants.GHOST;
 
+/**
+ * Check for power pills in the the proximity of the agent, if the are ghost in the lair it returns failure
+ * @author A. Alvarez
+ *
+ */
 public class PowerPillsAround extends Action{
 
 	@Override
@@ -33,7 +38,7 @@ public class PowerPillsAround extends Action{
 		
 		if(blackboard.current_game.getShortestPathDistance(blackboard.pacman_position, 
 															blackboard.current_game.getClosestNodeIndexFromNodeIndex
-															(blackboard.pacman_position,targetNodeIndices,DM.PATH)) < 60)
+															(blackboard.pacman_position,targetNodeIndices,DM.PATH)) < POWERPILL_MIN_DIST)
 		{
 			blackboard.target = blackboard.current_game.getClosestNodeIndexFromNodeIndex(blackboard.pacman_position,targetNodeIndices,DM.PATH);
 			return true;

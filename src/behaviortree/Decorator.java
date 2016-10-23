@@ -1,5 +1,6 @@
 package behaviortree;
 
+//TODO: implement decorators
 public class Decorator extends Node{
 
 	@Override

@@ -1,5 +1,10 @@
 package behaviortree;
 
+/**
+ * Node that controls the flow of the tree
+ * @author A. Alvarez
+ *
+ */
 public abstract class Composite extends Node {
 
 	public Composite(Node n)

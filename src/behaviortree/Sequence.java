@@ -1,5 +1,10 @@
 package behaviortree;
 
+/**
+ * Sequence object which run children until a failure state in one of them is reached.
+ * @author A. Alvarez
+ *
+ */
 public class Sequence extends Composite {
 
 	public Sequence(Node n) {

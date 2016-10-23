@@ -39,6 +39,13 @@ public class MCTSReward
 		MAX_survival_reward 	= survival_reward;
 	}
 	
+	/**
+	 * We add the scores achieved in simulation to the reward of the current node
+	 * Also normalize the values and calculate avg and max if we haave children.
+	 * @param other, reward from simulation
+	 * @param children list for caalcuating avg and max
+	 * @param times_visited
+	 */
 	public void AddValues(MCTSReward other, List<MCTSNode> children, int times_visited)
 	{
 		this.pill_reward += other.pill_reward;
@@ -65,6 +72,11 @@ public class MCTSReward
 		}
 	}
 	
+	/**
+	 * Calculate the avg individual score (i.e. pill, ghost, survival) of the children of this node
+	 * @param children
+	 * @param times_visited
+	 */
 	public void CalculateAvgFromChildren(List<MCTSNode> children, int times_visited)
 	{
 		if(!children.isEmpty())
@@ -78,10 +90,6 @@ public class MCTSReward
 				AVG_pill_reward 	+= child.my_reward.norm_pill_reward;
 				AVG_ghost_reward 	+= child.my_reward.norm_ghost_reward;
 				AVG_survival_reward += child.my_reward.norm_survival_reward;
-				
-//				System.out.println("CHILD AVG PILL REWARD: " + child.my_reward.AVG_pill_reward);
-//				System.out.println("CHILD AVG GHOST REWARD: " + child.my_reward.AVG_ghost_reward);
-//				System.out.println("CHILD AVG SURVIVAL REWARD: " + child.my_reward.AVG_survival_reward);
 			}
 			
 			AVG_pill_reward 	/= children.size();
@@ -90,17 +98,19 @@ public class MCTSReward
 		}
 	}
 	
+	/**
+	 * Calculate maximun score aamong all the children of this particular node, used for selection
+	 * @param children
+	 */
 	public void CalculateMaxFromChildren(List<MCTSNode> children)
 	{
 		float pr = -1000.0f;
 		float gr = -1000.0f;
 		float sr = -1000.0f;
-		float child_counter = 0.0f;
 		if(!children.isEmpty())
 		{
 			for(MCTSNode child : children)
 			{
-				child_counter += child.times_visited;
 				if(child.my_reward.MAX_pill_reward * child.my_reward.MAX_survival_reward >= pr)
 					pr = child.my_reward.MAX_pill_reward * child.my_reward.MAX_survival_reward;
 				
@@ -114,20 +124,6 @@ public class MCTSReward
 			MAX_pill_reward = pr;
 			MAX_ghost_reward = gr;
 			MAX_survival_reward = sr;
-//			if((child_counter / (float)(children.get(0).parent.times_visited)) < 0.5f)
-//			{
-//				MAX_pill_reward = pr;
-//				MAX_ghost_reward = gr;
-//				MAX_survival_reward = sr;
-//			}
-//			else
-//			{
-//				MAX_pill_reward = norm_pill_reward;
-//				MAX_ghost_reward = norm_ghost_reward;
-//				MAX_survival_reward = norm_survival_reward;
-//			}
-			
-			// I THINK THIS IS GOOD ALREADY
 		}
 		else
 		{
