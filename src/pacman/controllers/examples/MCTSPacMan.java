@@ -18,6 +18,7 @@ public class MCTSPacMan extends Controller<MOVE>
 	int 		next_dest 		= 0;
 	int 		previous_pos	= 0;
 	boolean 	reverse 		= false;
+	int i = 0;
 	
 	public MCTSPacMan()
 	{
@@ -31,6 +32,7 @@ public class MCTSPacMan extends Controller<MOVE>
 	@Override
 	public MOVE getMove(Game game, long timeDue) 
 	{
+		i++;
 		mcts.SetGame(game);
 		MOVE move = MOVE.NEUTRAL;
 		int pacman_pos = game.getPacmanCurrentNodeIndex();
@@ -93,6 +95,7 @@ public class MCTSPacMan extends Controller<MOVE>
 		//which will allow us to follow the correct path.
 		move = game.getPossibleMoves(game.getPacmanCurrentNodeIndex(), game.getPacmanLastMoveMade())[0];
 		previous_action = move.ordinal();
+
 		return move;
 	}
 

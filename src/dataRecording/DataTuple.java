@@ -18,6 +18,7 @@ public class DataTuple {
 	public int mazeIndex;
 	public int currentLevel;
 	public int pacmanPosition;
+	public double normalizedPosition;
 	public int pacmanLivesLeft;
 	public int currentScore;
 	public int totalGameTime;
@@ -63,6 +64,38 @@ public class DataTuple {
 	public MOVE inkyDir;
 	public MOVE pinkyDir;
 	public MOVE sueDir;
+	
+	//INPUTS FROM PAPER --> http://www.ai.rug.nl/~mwiering/GROUP/ARTICLES/MS_PACMAN_RL.pdf
+	public double pillsEaten = 0.0; //Level progress --> (total pills - amountRemaining)/Total pills
+	public double powerPill = 0.0; //Time since last consumed PP (0 if no recent pp) --> (TotalDurationPP - TimeSincePP)/TotalDurationPP
+	//Pills per pacman direction --> (Maximum path - shortestDistToPillinDir)/Maximum path
+	public double pillNorth = 0.0;
+	public double pillEast = 0.0;
+	public double pillSouth = 0.0;
+	public double pillWest = 0.0;
+	//Ghosts (a)=maxPath, (v)=GhostConstSpeed, (b(c))=Dist Betw NearGhost and Near Intersection for dir, (d(c))=DistNearestIntersection
+	//GhostDangerInput --> (a + d(c) * v - b(c)) / a
+	public double dangerNorth = 0.0;
+	public double dangerEast = 0.0;
+	public double dangerSouth = 0.0;
+	public double dangerWest = 0.0;
+	//Edible Ghosts (a)=maxPath, (b(c))=ShortDist to scaredGhost in Dir
+	//GhostAfraidInput --> (a - b(c))/a
+	public double afraidNorth = 0.0;
+	public double afraidEast = 0.0;
+	public double afraidSouth = 0.0;
+	public double afraidWest = 0.0;
+	//Entrapment (a)=TotalAmountSafeRoutes, (b(c))=Amount of safe routes in Dir
+	public double entrapmentNorth = 0.0;
+	public double entrapmentEast = 0.0;
+	public double entrapmentSouth = 0.0;
+	public double entrapmentWest = 0.0;
+	//CurrentMovDir --> Just return 1 or 0 based on the movement pacman is doing at the moment!
+	public double currentMoveUP = 0.0;
+	public double currentMoveRIGHT = 0.0;
+	public double currentMoveDOWN = 0.0;
+	public double currentMoveLEFT = 0.0;
+	
 	
 	//Util data - useful for normalization
 	public int numberOfNodesInLevel;
@@ -112,7 +145,7 @@ public class DataTuple {
 		this.numberOfTotalPillsInLevel = game.getNumberOfPills();
 		this.numberOfTotalPowerPillsInLevel = game.getNumberOfPowerPills();
 		
-		
+		this.normalizedPosition = normalizePosition(game.getPacmanCurrentNodeIndex());
 		//Set my individual values
 		this.n_neighbor = SetNeighbor(game.getNeighbour(pacmanPosition, MOVE.UP));
 		this.e_neighbor = SetNeighbor(game.getNeighbour(pacmanPosition, MOVE.RIGHT));
@@ -121,21 +154,25 @@ public class DataTuple {
 		
 		switch(ClosestGhost())
 		{
+		case -1:
+			closest_ghost_dir = MOVE.NEUTRAL;
+			closest_ghost_dist = -1.0;
+			 break;
 		case 0:
 			closest_ghost_dir = this.blinkyDir;
-			closest_ghost_dist = normalizeDistance(this.blinkyDist);
+			closest_ghost_dist = 1.0 - normalizeDistance(this.blinkyDist);
 			break;
 		case 1:
 			closest_ghost_dir = this.inkyDir;
-			closest_ghost_dist = normalizeDistance(this.inkyDist);
+			closest_ghost_dist = 1.0 - normalizeDistance(this.inkyDist);
 			break;
 		case 2:
 			closest_ghost_dir = this.pinkyDir;
-			closest_ghost_dist = normalizeDistance(this.pinkyDist);
+			closest_ghost_dist = 1.0 - normalizeDistance(this.pinkyDist);
 			break;
 		case 3:
 			closest_ghost_dir = this.sueDir;
-			closest_ghost_dist = normalizeDistance(this.sueDist);
+			closest_ghost_dist = 1.0 - normalizeDistance(this.sueDist);
 			break;
 		default:
 			break;
@@ -162,6 +199,7 @@ public class DataTuple {
 			closest_pp_dist = 0.8;
 		}
 		
+		
 		//CLOSEST NORMAL PILL
 		int[] pills=game.getPillIndices();	
 		
@@ -178,6 +216,40 @@ public class DataTuple {
 		
 		closest_pill_dist = normalizeDistance(game.getShortestPathDistance(this.pacmanPosition, 
 				game.getClosestNodeIndexFromNodeIndex (this.pacmanPosition ,targetsArray,DM.PATH)));
+		
+		closest_pp_dist = 1.0 - closest_pp_dist;
+		closest_pill_dist = 1.0 - closest_pill_dist;
+		
+		//THE NEW INPUTS!
+		
+		pillsEaten = 0.0;
+		powerPill = 0.0;
+		
+		pillNorth = 0.0;
+		pillEast = 0.0; 
+		pillSouth = 0.0;
+		pillWest = 0.0; 
+		
+		
+		dangerNorth = 0.0;
+		dangerEast = 0.0;
+		dangerSouth = 0.0;
+		dangerWest = 0.0;
+		
+		afraidNorth = 0.0;
+		afraidEast = 0.0;
+		afraidSouth = 0.0;
+		afraidWest = 0.0;
+		
+		entrapmentNorth = 0.0;
+		entrapmentEast = 0.0;
+		entrapmentSouth = 0.0;
+		entrapmentWest = 0.0;
+
+		currentMoveUP = 0.0;
+		currentMoveRIGHT = 0.0;
+		currentMoveDOWN = 0.0;
+		currentMoveLEFT = 0.0;
 
 	}
 	
@@ -231,6 +303,7 @@ public class DataTuple {
 		this.numberOfTotalPillsInLevel = game.getNumberOfPills();
 		this.numberOfTotalPowerPillsInLevel = game.getNumberOfPowerPills();
 		
+		this.normalizedPosition = normalizePosition(game.getPacmanCurrentNodeIndex());
 		
 		//Set my individual values
 		this.n_neighbor = SetNeighbor(game.getNeighbour(pacmanPosition, MOVE.UP));
@@ -240,21 +313,25 @@ public class DataTuple {
 		
 		switch(ClosestGhost())
 		{
+		case -1:
+			closest_ghost_dir = MOVE.NEUTRAL;
+			closest_ghost_dist = -1.0;
+			 break;
 		case 0:
 			closest_ghost_dir = this.blinkyDir;
-			closest_ghost_dist = normalizeDistance(this.blinkyDist);
+			closest_ghost_dist = 1.0 - normalizeDistance(this.blinkyDist);
 			break;
 		case 1:
 			closest_ghost_dir = this.inkyDir;
-			closest_ghost_dist = normalizeDistance(this.inkyDist);
+			closest_ghost_dist = 1.0 - normalizeDistance(this.inkyDist);
 			break;
 		case 2:
 			closest_ghost_dir = this.pinkyDir;
-			closest_ghost_dist = normalizeDistance(this.pinkyDist);
+			closest_ghost_dist = 1.0 - normalizeDistance(this.pinkyDist);
 			break;
 		case 3:
 			closest_ghost_dir = this.sueDir;
-			closest_ghost_dist = normalizeDistance(this.sueDist);
+			closest_ghost_dist = 1.0 - normalizeDistance(this.sueDist);
 			break;
 		default:
 			break;
@@ -297,34 +374,37 @@ public class DataTuple {
 		
 		closest_pill_dist = normalizeDistance(game.getShortestPathDistance(this.pacmanPosition, 
 				game.getClosestNodeIndexFromNodeIndex (this.pacmanPosition ,targetsArray,DM.PATH)));
+		
+		closest_pp_dist = 1.0 - closest_pp_dist;
+		closest_pill_dist = 1.0 - closest_pill_dist;
 
 	}
 	
 	public int ClosestGhost()
 	{
 		int min_dist = Integer.MAX_VALUE;
-		int selected_one = 0;
+		int selected_one = -1;
 		//0 = blinky
 		//1 = inky
 		//2 = pinky
 		//3 = sue
 		
-		if(this.blinkyDist < min_dist)
+		if(this.blinkyDist < min_dist && blinkyDist > 0)
 		{
 			selected_one = 0;
 			min_dist = this.blinkyDist;
 		}
-		if(this.inkyDist < min_dist)
+		if(this.inkyDist < min_dist  && inkyDist > 0)
 		{
 			selected_one = 1;
 			min_dist = this.inkyDist;
 		}
-		if(this.pinkyDist < min_dist)
+		if(this.pinkyDist < min_dist  && pinkyDist > 0)
 		{
 			selected_one = 2;
 			min_dist = this.pinkyDist;
 		}
-		if(this.sueDist < min_dist)
+		if(this.sueDist < min_dist  && sueDist > 0)
 		{
 			selected_one = 3;
 			min_dist = this.sueDist;
@@ -388,6 +468,8 @@ public class DataTuple {
 		this.numberOfNodesInLevel = Integer.parseInt(dataSplit[22]);
 		this.numberOfTotalPillsInLevel = Integer.parseInt(dataSplit[23]);
 		this.numberOfTotalPowerPillsInLevel = Integer.parseInt(dataSplit[24]);
+		this.normalizedPosition = normalizePosition(Integer.parseInt(dataSplit[3]));
+		
 		//my extra values
 		this.n_neighbor = Double.parseDouble(dataSplit[25]);
 		this.e_neighbor = Double.parseDouble(dataSplit[26]);

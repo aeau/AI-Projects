@@ -8,7 +8,7 @@ public class MCTSConstants
 	public static final int 	MAX_LEVEL_TIME 			= 70;		//maximum time the agent can expend in the default policy
 	public static final int 	MAX_DEPTH				= 55;		//maxmium tree distance depth between root node and leaf node path.
 	public static final int		CHILD_VISITED_THRESHOLD = 3; 		//minimum visits aa child need to have for UCT to be used (ensure exploration). 
-	public static final int		TIME_THRESHOLD			= 5;		//Maximun time we can spend calculating the next movement for the agent
+	public static final int		TIME_THRESHOLD			= 10;		//Maximun time we can spend calculating the next movement for the agent
 	public static final int		PACMAN_RANGE			= 40;		//How close is being paacman range
 	public static final int		MIN_DIST_TO_PACMAN		= 10;		//minimum distance to pacman to be in range to kill by the ghosts
 	public static final int		MAX_MAZE_TIME			= 1800;		//Maximum time before start asking for target by end game tactic

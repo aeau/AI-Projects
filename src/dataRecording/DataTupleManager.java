@@ -12,7 +12,7 @@ import pacman.game.util.*;
  */
 public class DataTupleManager {
 	
-	private static String FileName = "trainingData.txt";
+	private static String FileName = "trainingData-new.txt";
 	
 	public static void SavePacManData(DataTuple data)
 	{
@@ -28,6 +28,19 @@ public class DataTupleManager {
 		for(int i = 0; i < dataLine.length; i++)
 		{
 			dataTuples[i] = new DataTuple(dataLine[i]);
+		}
+		
+		return dataTuples;
+	}
+	public static ArrayList<DataTuple> LoadPacManDataArrayList(String file)
+	{
+		String data = IO.loadFile(file);
+		String[] dataLine = data.split("\n");
+		ArrayList<DataTuple> dataTuples = new ArrayList<DataTuple>();
+		
+		for(int i = 0; i < dataLine.length; i++)
+		{
+			dataTuples.add(new DataTuple(dataLine[i]));
 		}
 		
 		return dataTuples;

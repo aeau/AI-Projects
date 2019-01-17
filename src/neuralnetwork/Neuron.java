@@ -26,10 +26,10 @@ public class Neuron
 		neuron_type = nt;
 		
 		
-		if(neuron_type != NeuronTypes.INPUT)
-		{
-			AddConnection(new Neuron(NeuronTypes.BIAS, 1.0));
-		}
+//		if(neuron_type != NeuronTypes.INPUT)
+//		{
+//			AddConnection(new Neuron(NeuronTypes.BIAS, 1.0));
+//		}
 	}
 	
 	public Neuron(NeuronTypes nt, double value)
@@ -88,7 +88,7 @@ public class Neuron
 		}
 	}
 	
-	public void CalculateError(double value)
+	public void CalculateError(double expectedOutput)
 	{
 		switch(neuron_type)
 		{
@@ -101,13 +101,13 @@ public class Neuron
 			
 		case OUTPUT:
 			error = 0.0;
-			if(value == output)
+			if(expectedOutput == output)
 			{
 				error = 0;
 				return;
 			}
 			
-			error = (value - output) * (output * (1 - output));
+			error = (expectedOutput - output) * (output * (1 - output));
 			break;
 			
 		default:
@@ -116,17 +116,17 @@ public class Neuron
 		}
 	}
 	
-	public void GetAccumulatedError(ArrayList<Neuron> output_neurons)
+	public void GetAccumulatedError(ArrayList<Neuron> nextLayerNeurons)
 	{
 		error = 0.0;
 		
-		for(Neuron o : output_neurons)
+		for(Neuron nextLayerNeuron : nextLayerNeurons)
 		{
-			for(Connection c : o.connections)
+			for(Connection c : nextLayerNeuron.connections)
 			{
 				if(c.from == this)
 				{
-					error += (c.weight * o.error);
+					error += (c.weight * nextLayerNeuron.error);
 				}
 			}
 		}
@@ -138,6 +138,32 @@ public class Neuron
 		{
 			c.delta_weight = learning_rate * error * c.from.output;
 			c.weight += c.delta_weight;
+			c.delta_weight = 0.0f;
+		}
+	}
+	
+	public double AccumulateWeights(double learning_rate)
+	{
+		double highestDelta = 0.0;
+		for(Connection c : connections)
+		{
+			c.delta_weight += learning_rate * error * c.from.output;
+			
+			if(Math.abs(c.delta_weight) > highestDelta)
+			{
+				highestDelta = Math.abs(c.delta_weight);
+			}
+		}
+		
+		return highestDelta;
+	}
+	
+	public void ChangeWeights(double learning_rate)
+	{		
+		for(Connection c : connections)
+		{
+			c.weight += c.delta_weight;
+			c.delta_weight = 0.0f;
 		}
 	}
 	

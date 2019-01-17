@@ -130,7 +130,17 @@ public class UCT
 //            rootNode.maxChild = CalculateChildrenAndActionsWithReverse(rootNode);
             
             this.timeDue = timeDue;
+            
+            if(this.timeDue == -1)
+            {
+            	this.timeDue = System.currentTimeMillis() + 40;
+            	timeDue = System.currentTimeMillis() + 40;
+            }
+            
             this.time_left = timeDue - System.currentTimeMillis();
+            
+            System.out.println(timeDue);
+            System.out.println(time_left);
 
             /*
              * Apply UCT search inside computational budget limit (default=100 iterations) 
@@ -162,8 +172,8 @@ public class UCT
              */
             currentNode = BestFinalChild(0.0f);
             MOVE bestAction = currentNode.pacman_move;
-
-            
+            System.out.println(iterations);
+            System.out.println("TIME LEFT: " + this.time_left);
             //values used by the controller to debug and perform reverse movements.
             target = currentNode.destination;
             int start = game.getNeighbour(game.getPacmanCurrentNodeIndex(), bestAction);
@@ -591,6 +601,9 @@ public class UCT
 	private boolean Terminate(int i) 
 	{
 		this.time_left = this.timeDue - System.currentTimeMillis();
+		System.out.println("time DUE: " + this.timeDue);
+		System.out.println("current: " + System.currentTimeMillis());
+		System.out.println(this.time_left);
 		return (i>MCTSConstants.MAX_ITERATIONS) || this.time_left < MCTSConstants.TIME_THRESHOLD;
 	}
 	

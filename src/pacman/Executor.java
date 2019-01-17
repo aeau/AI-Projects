@@ -110,6 +110,7 @@ public class Executor
 //		exec.runGameTimed(new MCTSPacMan(),new AggressiveGhosts(),visual);
 //		exec.runGameTimed(new MCTSPacMan(),new Legacy2TheReckoning(),visual);
 //		exec.runGameTimed(new MCTSPacMan(),new RandomGhosts(),visual);
+//		exec.runGame(new MCTSPacMan(),new StarterGhosts(),visual, delay);	
 		
 //		exec.runGame(new PlayoutPacman(),new Legacy2TheReckoning(),visual, delay);	
 //		exec.runExperiment(new PlayoutPacman(),new Legacy2TheReckoning(),100);
@@ -136,11 +137,11 @@ public class Executor
 		
 		//FOR NEURAL NETWORKS
 
-		//exec.runGameTimed(new DataCollectorController(new KeyBoardInput()),new StarterGhosts(),visual);	
-		//NeuralNetwork nn = new NeuralNetwork();
-		//exec.runGameTimed(new NeuralNetworkPacMan(nn),new StarterGhosts(),visual);	
-		//exec.runGame(new NeuralNetworkPacMan(nn),new StarterGhosts(),visual,5);
-		
+//		exec.runGameTimed(new DataCollectorController(new KeyBoardInput()),new StarterGhosts(),visual);	
+		NeuralNetwork nn = new NeuralNetwork(new int[] {100, 100});
+//		exec.runGameTimed(new NeuralNetworkPacMan(nn),new StarterGhosts(),visual);	
+		exec.runGame(new NeuralNetworkPacMan(nn, true),new StarterGhosts(),visual,10);
+		exec.runGame(new NeuralNetworkPacMan(nn, false),new StarterGhosts(),visual,10);
 
 		//FOR BEHAVIOR TREES
 		
@@ -156,6 +157,7 @@ public class Executor
 		//exec.runExperiment(new RandomPacMan(),new RandomGhosts(),numTrials);
 		
 		//Load tree from txt file
+//		Tree t = DataManager.LoadTree("Champion_copy.txt");
 //		Tree t = DataManager.LoadTree("simple-tree.txt");
 //		exec.runGameTimed(new BehaviorTreePacMan(t),new StarterGhosts(),visual);
 		//exec.runGame(new BehaviorTreePacMan(t),new StarterGhosts(),visual,5);

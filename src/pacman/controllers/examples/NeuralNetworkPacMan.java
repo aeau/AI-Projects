@@ -1,5 +1,8 @@
 package pacman.controllers.examples;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import dataRecording.DataTuple;
 import neuralnetwork.NeuralNetwork;
 import neuralnetwork.Neuron;
@@ -12,11 +15,13 @@ public class NeuralNetworkPacMan extends Controller<MOVE>{
 
 	NeuralNetwork nn;
 	MOVE next_move;
+	boolean usingPossibleMoves = false;
 	
-	public NeuralNetworkPacMan(NeuralNetwork nn)
+	public NeuralNetworkPacMan(NeuralNetwork nn, boolean possibleMoves)
 	{
 		super();
 		this.nn = nn;
+		usingPossibleMoves = possibleMoves;
 	}
 	
 	@Override
@@ -32,22 +37,40 @@ public class NeuralNetworkPacMan extends Controller<MOVE>{
 		
 		DataTuple tuple = new DataTuple(game);
 		nn.FeedForward(tuple);
+		MOVE[] possibleMoves = game.getPossibleMoves(game.getPacmanCurrentNodeIndex(), game.getPacmanLastMoveMade());
 		
 		//Select correct output
 		int selected_index = 0;
 		double best_value = Double.MIN_VALUE;
+		ArrayList<Neuron> outputNeurons = nn.neuralLayers.get(nn.neuralLayers.size() - 1).getNeurons();
 		
-		for(int i = 0; i < nn.output_neurons_quantity; i++)
+		
+		if(usingPossibleMoves)
 		{
-			if(nn.output_neurons.get(i).output > best_value)
-			{
-				best_value = nn.output_neurons.get(i).output;
-				selected_index = i;
+			for (MOVE move : possibleMoves) {
+				int i = move.ordinal();
+				double val = outputNeurons.get(i).output;
+				if (val > best_value) {
+					selected_index = i;
+					best_value = val;
+				}
 			}
 		}
-		
+		else
+		{
+			for(int currentNeuron = 0; currentNeuron < outputNeurons.size(); currentNeuron++)
+			{
+				System.out.println("OUTPUT " + currentNeuron + ": " + outputNeurons.get(currentNeuron).output);
+				if(outputNeurons.get(currentNeuron).output > best_value)
+				{
+					best_value = outputNeurons.get(currentNeuron).output;
+					selected_index = currentNeuron;
+				}
+			}
+		}
+
 		next_move = MOVE.values()[selected_index];
-		
+		System.out.println(next_move);
 		return next_move;
 	}
 
