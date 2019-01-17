@@ -139,7 +139,6 @@ public class Executor
 
 //		exec.runGameTimed(new DataCollectorController(new KeyBoardInput()),new StarterGhosts(),visual);	
 		NeuralNetwork nn = new NeuralNetwork(new int[] {100, 100});
-//		exec.runGameTimed(new NeuralNetworkPacMan(nn),new StarterGhosts(),visual);	
 		exec.runGame(new NeuralNetworkPacMan(nn, true),new StarterGhosts(),visual,10);
 		exec.runGame(new NeuralNetworkPacMan(nn, false),new StarterGhosts(),visual,10);
 
